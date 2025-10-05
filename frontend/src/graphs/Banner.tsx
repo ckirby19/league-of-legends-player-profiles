@@ -1,7 +1,9 @@
+import { MatchInfo } from "@/utils/types";
+
 interface BannerProps {
   playerName: string;
   playerLogo: string; // URL or path to logo image
-  matches: { id: string; label: string }[];
+  matches: MatchInfo[];
   selectedMatch: string;
   onSelectMatch: (id: string) => void;
 }
@@ -38,7 +40,7 @@ export function Banner({
           className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
         >
           {matches.map((m) => (
-            <option key={m.id} value={m.id}>
+            <option key={m.matchId} value={m.matchId}>
               {m.label}
             </option>
           ))}

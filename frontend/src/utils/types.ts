@@ -128,5 +128,10 @@ export interface PlayerEvent {
   description?: string; // e.g. "Killed Ahri", "Took Dragon"
 }
 
+export interface MatchInfo {
+  matchId: string;
+  label: string;
+}
+
 export const OriginalMapDimension = 16000; // Original map size in Riot data
 export const DisplayMapDimension = 500;    // Display size in pixels
