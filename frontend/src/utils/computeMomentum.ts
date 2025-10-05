@@ -43,8 +43,11 @@ export function computeMinuteSummaries(
     const team2XP = team2Ids.reduce((sum, id) => sum + (frame.participantFrames[id]?.xp || 0), 0);
 
     // Advantage (using gold here, but could average gold+xp)
-    const advGold = computeAdvantage(team1Gold, team2Gold);
-    const advXP = computeAdvantage(team1XP, team2XP);
+    const advGold = team1Gold - team2Gold;
+    const advXP = team1XP - team2XP;
+    // Normalized advantage [-1, 1]
+    const normalizedAdvGold = computeAdvantage(team1Gold, team2Gold);
+    const normalizedAdvXP = computeAdvantage(team1XP, team2XP);
 
     // Winning probability per metric
     const pGold = pythagoreanExpectation(team1Gold, team2Gold, x);
@@ -116,10 +119,12 @@ export function computeMinuteSummaries(
 
     summaries.push({
       minute,
-      advantage: (advGold + advXP) / 2,
+      advantage: (normalizedAdvGold + normalizedAdvXP) / 2,
       winProb: pFinal,
       playerPosition,
       playerEvents,
+      goldAdvantage: advGold,
+      xpAdvantage: advXP,
     });
   });
 

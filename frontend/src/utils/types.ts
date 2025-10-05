@@ -33,6 +33,8 @@ export interface MinuteSummary {
   momentumImpact?: number;    // ΔP between t and t+1
   playerPosition?: { x: number; y: number };
   playerEvents: PlayerEvent[];
+  goldAdvantage: number;      // team1Gold - team2Gold
+  xpAdvantage: number;        // team1XP - team2XP
 }
 
 export type TimelineEvent =
