@@ -129,8 +129,21 @@ export interface PlayerEvent {
 }
 
 export interface MatchInfo {
-  matchId: string;
-  label: string;
+  match_id: string;
+  gameMode: string;
+  queueId: number;
+  gameDuration: number; // seconds
+  gameEndTimestamp: number; // epoch ms
+  championName: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  win: boolean;
+}
+
+export interface MatchInfoResponse {
+  puuid: string;
+  match_info: MatchInfo[];
 }
 
 export const OriginalMapDimension = 16000; // Original map size in Riot data

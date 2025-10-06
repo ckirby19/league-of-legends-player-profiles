@@ -6,16 +6,51 @@ import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
 import { AdvantageChart } from "./lineGraphs/Advantage";
 import { MapVisualizer } from "./MapVisualizer";
 import { TimelineControls } from "./TimelineControls";
-import { MinuteSummary } from "../utils/types";
+import { MinuteSummary, TimelineData } from "../utils/types";
+import { computeMinuteSummaries } from "@/utils/computeMomentum";
+import { getMatchTimelineForSummonerMatch } from "@/utils/getMatchTimeline";
 
 interface DashboardProps {
-  summaries: MinuteSummary[];
+  matchId: string;
+  summonerName: string;
+  region: string;
   mapSrc: string;
 }
 
-export function Dashboard({ summaries, mapSrc }: DashboardProps) {
+export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardProps) {
   const [currentMinute, setCurrentMinute] = useState(0);
+  const [summaries, setSummaries] = useState<MinuteSummary[]>([]);
+  
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    async function loadTimeline() {
+      // Replace with your Lambda call later
+      // const res = await fetch(`/ExampleData/${matchId}.json`);
+      let timeline: TimelineData;
+      try {
+        const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchId);
+        if (fetchedTimeline instanceof Error) {
+          console.log("Error fetching timeline:", fetchedTimeline.message);
+          const res = await fetch(`/ExampleData/NA1_4916026624.json`);
+          timeline = await res.json();
+        }
+        else{
+          timeline = fetchedTimeline;
+        }
+  
+      } catch (error) {
+        console.log("Error fetching timeline");
+        const res = await fetch(`/ExampleData/NA1_4916026624.json`);
+        timeline = await res.json();
+      }
+
+      const parsed = computeMinuteSummaries(timeline!, 1, [1,2,3,4,5], [6,7,8,9,10]);
+      setSummaries(parsed);
+    }
+
+    loadTimeline();
+  }, [matchId, region, summonerName]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -32,6 +67,10 @@ export function Dashboard({ summaries, mapSrc }: DashboardProps) {
       if (interval) clearInterval(interval);
     };
   }, [isPlaying, summaries.length]);
+
+  if (summaries.length === 0) {
+    return <div className="text-white">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-6">
