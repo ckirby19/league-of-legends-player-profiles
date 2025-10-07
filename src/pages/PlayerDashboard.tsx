@@ -33,7 +33,7 @@ export function PlayerDashboard({ playerName, region, matches, onLogout }: Playe
         />
 
         {/* Right dashboard */}
-        <div className="flex-1 p-6 bg-black overflow-y-auto">
+        <div className="flex-1 p-1 bg-black overflow-y-auto">
           <Dashboard
             matchId={selectedMatch.match_id}
             summonerName={playerName}

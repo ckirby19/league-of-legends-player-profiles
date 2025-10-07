@@ -91,7 +91,7 @@ export function Login({ onLogin }: LoginProps) {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-2 rounded font-semibold ${
+          className={`w-full py-2 rounded font-semibold hover:cursor-pointer ${
             loading
               ? "bg-gray-600 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700"

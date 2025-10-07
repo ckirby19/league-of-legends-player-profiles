@@ -18,7 +18,11 @@ export const TimelineControls = ({
 }: TimelineControlsProps) => {
   return (
     <div className="flex flex-col items-center gap-2">
-      <Button onClick={onPlayToggle}>
+      <Button
+        className="py-2 hover:cursor-pointer"
+        variant="secondary"
+        onClick={onPlayToggle}
+      >
         {isPlaying ? "Pause" : "Play"}
       </Button>
       <Slider

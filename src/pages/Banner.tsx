@@ -23,6 +23,7 @@ export function Banner({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-4">
           <Button 
+            className="hover:cursor-pointer"
             variant="secondary"
             color="blue"
             onClick={() =>onLogout()}

@@ -1,6 +1,6 @@
 import { Stage, Layer, Image as KonvaImage, Circle} from "react-konva";
 import useImage from "use-image";
-import { MinuteSummary } from "../utils/types";
+import { DisplayMapDimension, MinuteSummary } from "../utils/types";
 
 interface MapVisualizerProps {
   mapSrc: string;
@@ -13,16 +13,15 @@ export const MapVisualizer = ({ mapSrc, summaries, currentMinute }: MapVisualize
   const summary = summaries.find((s) => s.minute === currentMinute);
 
   return (
-    <Stage width={500} height={500}>
+    <Stage width={DisplayMapDimension} height={DisplayMapDimension}>
       <Layer>
-        <KonvaImage image={map} width={500} height={500} />
+        <KonvaImage image={map} width={DisplayMapDimension} height={DisplayMapDimension} />
         {summary?.playerPosition && (
           <Circle
             x={summary.playerPosition.x}
             y={summary.playerPosition.y}
-            radius={8}
+            radius={DisplayMapDimension / 70 }
             fill="red"
-            shadowBlur={10}
           />
         )}
       </Layer>
