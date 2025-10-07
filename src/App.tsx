@@ -14,11 +14,22 @@ function App() {
     setMatches(matches);
   }
 
+  function onLogout(){
+    setSummonerName("");
+    setRegion(null);
+    setMatches(null);
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {!summonerName
       ? <Login onLogin={onLogin} />
-      : <PlayerDashboard playerName={summonerName} region={region!} matches={matches!.match_info} />}
+      : <PlayerDashboard
+          playerName={summonerName}
+          region={region!}
+          matches={matches!.match_info} 
+          onLogout={onLogout}
+        />}
     </div>
   );
 }

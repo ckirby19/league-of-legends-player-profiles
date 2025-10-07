@@ -7,6 +7,23 @@ interface MatchSelectorProps {
   onSelect: (id: string) => void;
 }
 
+function timeSince(timestamp: number): string {
+  const now = Date.now();
+  const diffMs = now - timestamp;
+
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  } else {
+    return `${diffDays}d ago`;
+  }
+}
+
 export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelectorProps) {
   return (
     <nav className="w-72 bg-neutral-900 text-white overflow-y-auto">
@@ -28,7 +45,7 @@ export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelec
               <span className="text-sm">{Math.floor(m.gameDuration / 60)}m</span>
             </div>
             <div className="text-xs text-gray-400">
-              `{m.gameMode} • {m.kills}/{m.deaths}/{m.assists} KDA • {new Date(m.gameEndTimestamp).toLocaleDateString()}`
+              {m.gameMode} • {m.kills}/{m.deaths}/{m.assists} KDA • {timeSince(m.gameEndTimestamp)}
             </div>
           </motion.li>
         ))}
