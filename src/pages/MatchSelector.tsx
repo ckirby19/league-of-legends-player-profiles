@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MatchInfo } from "./utils/types";
+import { MatchInfo } from "../utils/types";
 
 interface MatchSelectorProps {
   matches: MatchInfo[];

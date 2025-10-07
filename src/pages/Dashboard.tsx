@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { WinProbChart } from "./lineGraphs/WinProbability";
 import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
@@ -20,14 +20,14 @@ interface DashboardProps {
 export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardProps) {
   const [currentMinute, setCurrentMinute] = useState(0);
   const [summaries, setSummaries] = useState<MinuteSummary[]>([]);
+  const [loading, setLoading] = useState(false);
   
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     async function loadTimeline() {
-      // Replace with your Lambda call later
-      // const res = await fetch(`/ExampleData/${matchId}.json`);
       let timeline: TimelineData;
+      setLoading(true);
       try {
         const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchId);
         if (fetchedTimeline instanceof Error) {
@@ -43,6 +43,8 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
         console.log("Error fetching timeline");
         const res = await fetch(`/ExampleData/NA1_4916026624.json`);
         timeline = await res.json();
+      } finally {
+        setLoading(false);
       }
 
       const parsed = computeMinuteSummaries(timeline!, 1, [1,2,3,4,5], [6,7,8,9,10]);
@@ -75,7 +77,6 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-6">
       <div className="flex flex-row gap-8 w-full max-w-[1600px]">
-        {/* Left column: charts */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -141,55 +142,26 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
         />
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="mt-10 w-full max-w-[1200px]"
-        >
-        <h3 className="text-lg font-semibold mb-4">Play-by-Play</h3>
-        <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-700 text-sm">
-            <thead className="bg-neutral-800">
-                <tr>
-                <th className="px-4 py-2 border-b border-gray-700 text-left">Minute</th>
-                <th className="px-4 py-2 border-b border-gray-700 text-left">Event</th>
-                <th className="px-4 py-2 border-b border-gray-700 text-left">Analysis</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr className="hover:bg-neutral-800/50">
-                <td className="px-4 py-2 border-b border-gray-700">3</td>
-                <td className="px-4 py-2 border-b border-gray-700">First Blood (Mid Lane)</td>
-                <td className="px-4 py-2 border-b border-gray-700">
-                    Early kill gives Team 1’s mid laner lane priority and XP lead.
-                </td>
-                </tr>
-                <tr className="hover:bg-neutral-800/50">
-                <td className="px-4 py-2 border-b border-gray-700">8</td>
-                <td className="px-4 py-2 border-b border-gray-700">Dragon Taken (Infernal)</td>
-                <td className="px-4 py-2 border-b border-gray-700">
-                    Securing the first dragon boosts scaling advantage for Team 2.
-                </td>
-                </tr>
-                <tr className="hover:bg-neutral-800/50">
-                <td className="px-4 py-2 border-b border-gray-700">15</td>
-                <td className="px-4 py-2 border-b border-gray-700">Tower Destroyed (Top Lane)</td>
-                <td className="px-4 py-2 border-b border-gray-700">
-                    Opens up map pressure; Team 1 can now rotate top laner to Rift Herald.
-                </td>
-                </tr>
-                <tr className="hover:bg-neutral-800/50">
-                <td className="px-4 py-2 border-b border-gray-700">22</td>
-                <td className="px-4 py-2 border-b border-gray-700">Baron Fight</td>
-                <td className="px-4 py-2 border-b border-gray-700">
-                    A 3-for-0 trade secures Baron for Team 2, swinging momentum heavily.
-                </td>
-                </tr>
-            </tbody>
-            </table>
-        </div>
-        </motion.div>
+      {/* Overlay */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            key="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.8 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black flex items-center justify-center z-50"
+          >
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
+              <span className="mt-4 text-blue-300 font-semibold">
+                Loading match timeline...
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
