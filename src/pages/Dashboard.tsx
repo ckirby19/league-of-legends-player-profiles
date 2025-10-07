@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { WinProbChart } from "./lineGraphs/WinProbability";
 import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
 import { AdvantageChart } from "./lineGraphs/Advantage";
@@ -75,28 +75,28 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center p-6">
-      <div className="flex flex-row gap-8 w-full max-w-[1600px]">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center p-4">
+      <div className="flex flex-row gap-4 w-full">
+        {/* Left column: data */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1"
+          className="flex-2"
         >
           <Card className="bg-neutral-900 text-white w-full">
-            <CardHeader />
-            <CardContent>
-              <div className="mb-10">
+            <CardContent className="pt-2">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-2">Team 1 Advantage</h3>
+                <AdvantageChart data={summaries} currentMinute={currentMinute} />
+              </div>
+              <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Player Team Win Probability</h3>
                 <WinProbChart data={summaries} currentMinute={currentMinute} />
               </div>
-              <div className="mb-10">
+              <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Momentum Impact</h3>
                 <MomentumImpactChart data={summaries} currentMinute={currentMinute} />
-              </div>
-              <div className="mb-10">
-                <h3 className="text-lg font-semibold mb-2">Team 1 Advantage</h3>
-                <AdvantageChart data={summaries} currentMinute={currentMinute} />
               </div>
             </CardContent>
           </Card>
@@ -110,11 +110,8 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
           className="flex-1"
         >
           <Card className="bg-neutral-900 text-white w-full h-full">
-            <CardHeader>
-              <CardTitle>Map Visualizer</CardTitle>
-              <CardDescription>Player position & events</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
+              <h3 className="text-lg font-semibold mb-2">Map Visualizer - Player Position</h3>
               <div className="w-full aspect-square">
                 <MapVisualizer
                   mapSrc={mapSrc}
@@ -122,25 +119,17 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
                   currentMinute={currentMinute}
                 />
               </div>
+              <TimelineControls
+                currentMinute={currentMinute}
+                duration={summaries.length - 1}
+                isPlaying={isPlaying}
+                onPlayToggle={() => setIsPlaying((p) => !p)}
+                onSeek={setCurrentMinute}
+              />
             </CardContent>
           </Card>
         </motion.div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        className="mt-8 w-full max-w-[1200px]"
-      >
-        <TimelineControls
-          currentMinute={currentMinute}
-          duration={summaries.length - 1}
-          isPlaying={isPlaying}
-          onPlayToggle={() => setIsPlaying((p) => !p)}
-          onSeek={setCurrentMinute}
-        />
-      </motion.div>
 
       {/* Overlay */}
       <AnimatePresence>

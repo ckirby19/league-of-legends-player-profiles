@@ -147,4 +147,4 @@ export interface MatchInfoResponse {
 }
 
 export const OriginalMapDimension = 16000; // Original map size in Riot data
-export const DisplayMapDimension = 500;    // Display size in pixels
+export const DisplayMapDimension = 400;    // Display size in pixels

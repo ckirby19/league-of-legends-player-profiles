@@ -41,7 +41,7 @@ export const MatchInput = ({ onSubmit }: MatchInputProps) => {
           />
         </label>
       </div>
-      <button type="submit" style={{ marginTop: "0.75rem" }}>
+      <button className="hover:cursor-pointer" type="submit" style={{ marginTop: "0.75rem" }}>
         Load Match Data
       </button>
     </form>

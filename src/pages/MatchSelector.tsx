@@ -26,7 +26,7 @@ function timeSince(timestamp: number): string {
 
 export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelectorProps) {
   return (
-    <nav className="w-72 bg-neutral-900 text-white overflow-y-auto">
+    <nav className="w-1/6 bg-neutral-900 text-white overflow-y-auto">
       <h3 className="px-4 py-2 font-semibold border-b border-gray-700">Recent Games</h3>
       <ul>
         {matches.map((m) => (
