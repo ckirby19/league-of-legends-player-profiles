@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MatchInfoResponse } from "./utils/types";
-import { Login } from "./Login";
-import { PlayerDashboard } from "./PlayerDashboard";
+import { Login } from "./pages/Login";
+import { PlayerDashboard } from "./pages/PlayerDashboard";
 
 function App() {
   const [matches, setMatches] = useState<MatchInfoResponse | null>(null);

@@ -1,5 +1,5 @@
 // utils/computeMomentum.ts
-import { TimelineData, MinuteSummary, Frame, TimelineEvent, ChampionKillEvent, WardPlacedEvent, WardKillEvent, BuildingKillEvent, EliteMonsterKillEvent, PlayerEvent } from "./types";
+import { TimelineData, MinuteSummary, Frame, TimelineEvent, ChampionKillEvent, WardPlacedEvent, WardKillEvent, BuildingKillEvent, EliteMonsterKillEvent, PlayerEvent, OriginalMapDimension, DisplayMapDimension } from "./types";
 
 function computeAdvantage(team1: number, team2: number): number {
   if (team1 + team2 === 0) return 0;
@@ -60,8 +60,8 @@ export function computeMinuteSummaries(
     const playerFrame = frame.participantFrames[playerId.toString()];
     const playerPosition = playerFrame?.position
       ? {
-          x: (playerFrame.position.x / 15000) * 500, // scale to 500px map
-          y: (playerFrame.position.y / 15000) * 500,
+          x: (playerFrame.position.x / OriginalMapDimension) * DisplayMapDimension,
+          y: (playerFrame.position.y / OriginalMapDimension) * DisplayMapDimension,
         }
       : undefined;
 

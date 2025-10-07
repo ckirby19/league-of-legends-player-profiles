@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { MatchInfoResponse } from "./utils/types";
+import { MatchInfoResponse } from "../utils/types";
 import { motion } from "framer-motion";
-import { getMatchIdsForSummoner } from "./utils/getMatchIds";
+import { getMatchIdsForSummoner } from "../utils/getMatchIds";
 
 interface LoginProps {
   onLogin: (summonerName: string, region: string, matches: MatchInfoResponse) => void;

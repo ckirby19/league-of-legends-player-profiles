@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Banner } from "./graphs/Banner";
-import { Dashboard } from "./graphs/Dashboard";
-import { MatchInfo } from "./utils/types";
+import { Banner } from "./Banner";
+import { Dashboard } from "./Dashboard";
+import { MatchInfo } from "../utils/types";
 import { MatchSelector } from "./MatchSelector";
 
 interface PlayerDashboardProps {
