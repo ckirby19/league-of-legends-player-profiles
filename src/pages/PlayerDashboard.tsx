@@ -8,9 +8,10 @@ interface PlayerDashboardProps {
   playerName: string;
   region: string;
   matches: MatchInfo[];
+  onLogout: () => void;
 }
 
-export function PlayerDashboard({ playerName, region, matches }: PlayerDashboardProps) {
+export function PlayerDashboard({ playerName, region, matches, onLogout }: PlayerDashboardProps) {
   const [selectedMatch, setSelectedMatch] = useState(matches[0]);
 
   return (
@@ -18,6 +19,7 @@ export function PlayerDashboard({ playerName, region, matches }: PlayerDashboard
       <Banner
         playerName={playerName}
         playerLogo="/player_logo.png"
+        onLogout={onLogout}
       />
       <div className="flex min-h-screen bg-gray-950 text-white">
         {/* Left navbar */}
@@ -31,7 +33,7 @@ export function PlayerDashboard({ playerName, region, matches }: PlayerDashboard
         />
 
         {/* Right dashboard */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6 bg-black overflow-y-auto">
           <Dashboard
             matchId={selectedMatch.match_id}
             summonerName={playerName}

@@ -1,11 +1,16 @@
+import { Button } from "@/components/ui/button";
+
 interface BannerProps {
   playerName: string;
   playerLogo: string; // URL or path to logo image
+  onLogout: () => void;
+
 }
 
 export function Banner({
   playerName,
   playerLogo,
+  onLogout
 }: BannerProps) {
   return (
     <div className="w-full bg-gray-900 text-white flex items-center justify-between px-6 py-3 shadow-md">
@@ -15,8 +20,15 @@ export function Banner({
       </div>
 
       {/* Right side: Welcome + logo + match selector */}
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="secondary"
+            color="blue"
+            onClick={() =>onLogout()}
+            > 
+              Change Summoner
+          </Button>
           <span className="text-sm">Summoner: {playerName}</span>
           <img
             src={playerLogo}

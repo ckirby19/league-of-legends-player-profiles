@@ -61,7 +61,7 @@ export function computeMinuteSummaries(
     const playerPosition = playerFrame?.position
       ? {
           x: (playerFrame.position.x / OriginalMapDimension) * DisplayMapDimension,
-          y: (playerFrame.position.y / OriginalMapDimension) * DisplayMapDimension,
+          y: DisplayMapDimension - (playerFrame.position.y / OriginalMapDimension) * DisplayMapDimension,
         }
       : undefined;
 
