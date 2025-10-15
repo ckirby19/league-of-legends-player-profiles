@@ -1,5 +1,5 @@
 // utils/computeMomentum.ts
-import { TimelineData, MinuteSummary, Frame, TimelineEvent, ChampionKillEvent, WardPlacedEvent, WardKillEvent, BuildingKillEvent, EliteMonsterKillEvent, PlayerEvent, OriginalMapDimension, DisplayMapDimension } from "./types";
+import { TimelineData, MinuteSummary, Frame, TimelineEvent, ChampionKillEvent, WardPlacedEvent, WardKillEvent, BuildingKillEvent, EliteMonsterKillEvent, PlayerEvent, OriginalMapDimension, DisplayMapDimension, MatchInfo } from "./types";
 
 function computeAdvantage(team1: number, team2: number): number {
   if (team1 + team2 === 0) return 0;
@@ -12,9 +12,7 @@ function pythagoreanExpectation(team1: number, team2: number, x: number): number
 
 export function computeMinuteSummaries(
   timeline: TimelineData,
-  playerId: number,
-  team1Ids: number[],
-  team2Ids: number[],
+  matchInfo: MatchInfo,
   x: number = 2 // exponent for Pythagorean expectation
 ): MinuteSummary[] {
   const frames = timeline.info.frames;
@@ -27,6 +25,14 @@ export function computeMinuteSummaries(
     minutes[minute].push(frame);
   });
 
+  // Identify teams and player
+  const playerId = timeline.info.participants.find(p => p.puuid == matchInfo.playerPuuid)?.participantId;
+  if (!playerId)
+    throw new Error("Player not found in timeline participants");
+
+  const playerTeamIds = timeline.info.participants.filter(p => matchInfo.playerTeamParticipants.includes(p.puuid)).map(p => p.participantId);
+  const enemyTeamIds = timeline.info.participants.filter(p => matchInfo.enemyTeamParticipants.includes(p.puuid)).map(p => p.participantId);
+
   const summaries: MinuteSummary[] = [];
 
   Object.entries(minutes).forEach(([minuteStr, frames]) => {
@@ -36,22 +42,23 @@ export function computeMinuteSummaries(
     const frame = frames[frames.length - 1];
 
     // Aggregate metrics
-    const team1Gold = team1Ids.reduce((sum, id) => sum + (frame.participantFrames[id]?.totalGold || 0), 0);
-    const team2Gold = team2Ids.reduce((sum, id) => sum + (frame.participantFrames[id]?.totalGold || 0), 0);
+    const playerTeamGold = playerTeamIds.reduce((sum, id) => sum + (frame.participantFrames[id]?.totalGold || 0), 0);
+    const enemyTeamGold = enemyTeamIds.reduce((sum, id) => sum + (frame.participantFrames[id]?.totalGold || 0), 0);
 
-    const team1XP = team1Ids.reduce((sum, id) => sum + (frame.participantFrames[id]?.xp || 0), 0);
-    const team2XP = team2Ids.reduce((sum, id) => sum + (frame.participantFrames[id]?.xp || 0), 0);
+    const playerTeamXP = playerTeamIds.reduce((sum, id) => sum + (frame.participantFrames[id]?.xp || 0), 0);
+    const enemyTeamXP = enemyTeamIds.reduce((sum, id) => sum + (frame.participantFrames[id]?.xp || 0), 0);
 
-    // Advantage (using gold here, but could average gold+xp)
-    const advGold = team1Gold - team2Gold;
-    const advXP = team1XP - team2XP;
+    // Advantage
+    const advGold = playerTeamGold - enemyTeamGold;
+    const advXP = playerTeamXP - enemyTeamXP;
+
     // Normalized advantage [-1, 1]
-    const normalizedAdvGold = computeAdvantage(team1Gold, team2Gold);
-    const normalizedAdvXP = computeAdvantage(team1XP, team2XP);
+    const normalizedAdvGold = computeAdvantage(playerTeamGold, enemyTeamGold);
+    const normalizedAdvXP = computeAdvantage(playerTeamXP, enemyTeamXP);
 
     // Winning probability per metric
-    const pGold = pythagoreanExpectation(team1Gold, team2Gold, x);
-    const pXP = pythagoreanExpectation(team1XP, team2XP, x);
+    const pGold = pythagoreanExpectation(playerTeamGold, enemyTeamGold, x);
+    const pXP = pythagoreanExpectation(playerTeamXP, enemyTeamXP, x);
 
     // Final probability = average
     const pFinal = (pGold + pXP) / 2;

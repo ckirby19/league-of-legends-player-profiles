@@ -25,9 +25,9 @@ export function PlayerDashboard({ playerName, region, matches, onLogout }: Playe
         {/* Left navbar */}
         <MatchSelector
           matches={matches}
-          selectedMatchId={selectedMatch.match_id}
+          selectedMatchId={selectedMatch.matchId}
           onSelect={(id) => {
-            const match = matches.find((m) => m.match_id === id);
+            const match = matches.find((m) => m.matchId === id);
             setSelectedMatch(match!);
           }}
         />
@@ -35,7 +35,7 @@ export function PlayerDashboard({ playerName, region, matches, onLogout }: Playe
         {/* Right dashboard */}
         <div className="flex-1 p-1 bg-black overflow-y-auto">
           <Dashboard
-            matchId={selectedMatch.match_id}
+            matchInfo={selectedMatch}
             summonerName={playerName}
             region={region}
             mapSrc="/minimap.png"

@@ -6,18 +6,18 @@ import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
 import { AdvantageChart } from "./lineGraphs/Advantage";
 import { MapVisualizer } from "./MapVisualizer";
 import { TimelineControls } from "./TimelineControls";
-import { MinuteSummary, TimelineData } from "../utils/types";
+import { MatchInfo, MinuteSummary, TimelineData } from "../utils/types";
 import { computeMinuteSummaries } from "@/utils/computeMomentum";
 import { getMatchTimelineForSummonerMatch } from "@/utils/getMatchTimeline";
 
 interface DashboardProps {
-  matchId: string;
+  matchInfo: MatchInfo;
   summonerName: string;
   region: string;
   mapSrc: string;
 }
 
-export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardProps) {
+export function Dashboard({ matchInfo, summonerName, region, mapSrc }: DashboardProps) {
   const [currentMinute, setCurrentMinute] = useState(0);
   const [summaries, setSummaries] = useState<MinuteSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
       let timeline: TimelineData;
       setLoading(true);
       try {
-        const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchId);
+        const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchInfo.matchId);
         if (fetchedTimeline instanceof Error) {
           console.log("Error fetching timeline:", fetchedTimeline.message);
           const res = await fetch(`/ExampleData/NA1_4916026624.json`);
@@ -47,12 +47,12 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
         setLoading(false);
       }
 
-      const parsed = computeMinuteSummaries(timeline!, 1, [1,2,3,4,5], [6,7,8,9,10]);
+      const parsed = computeMinuteSummaries(timeline!, matchInfo);
       setSummaries(parsed);
     }
 
     loadTimeline();
-  }, [matchId, region, summonerName]);
+  }, [matchInfo, region, summonerName]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -87,7 +87,7 @@ export function Dashboard({ matchId, summonerName, region, mapSrc }: DashboardPr
           <Card className="bg-neutral-900 text-white w-full">
             <CardContent className="pt-2">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">Team 1 Advantage</h3>
+                <h3 className="text-lg font-semibold mb-2">Player Team Advantage</h3>
                 <AdvantageChart data={summaries} currentMinute={currentMinute} />
               </div>
               <div className="mb-4">

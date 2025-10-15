@@ -15,9 +15,12 @@ export const WinProbChart = ({ data, currentMinute }: WinProbChartProps) => (
         dataKey="minute"
         ticks={data.map(d => d.minute).filter(m => m % 2 === 0)} // only even minutes
         label={{ value: "Time (mins)", position: "insideBottom", offset: -5 }}
-
       />
-      <YAxis domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
+      <YAxis
+        domain={[0.25, 0.75]}
+        ticks={[0.25, 0.5, 0.75]}
+        tickFormatter={(v) => `${Math.round(v * 100)}%`} 
+      />
       <Tooltip formatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
       <Line
         type="monotone"
@@ -28,6 +31,7 @@ export const WinProbChart = ({ data, currentMinute }: WinProbChartProps) => (
         name="Win Probability"
       />
       <ReferenceLine x={currentMinute} stroke="red" />
+      <ReferenceLine y={0.5} stroke="white" strokeDasharray="5 5" />
     </LineChart>
   </ResponsiveContainer>
 );

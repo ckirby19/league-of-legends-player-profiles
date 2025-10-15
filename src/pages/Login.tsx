@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { MatchInfoResponse } from "../utils/types";
 import { motion } from "framer-motion";
-import { getMatchIdsForSummoner } from "../utils/getMatchIds";
+import { getMatchIdsResponseForSummoner } from "../utils/getMatchIds";
+import { MatchInfo } from "@/utils/types";
+import { getMatchInfoForSummonerMatch } from "@/utils/getMatchInfo";
 
 interface LoginProps {
-  onLogin: (summonerName: string, region: string, matches: MatchInfoResponse) => void;
+  onLogin: (summonerName: string, region: string, matches: MatchInfo[]) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
@@ -19,10 +20,20 @@ export function Login({ onLogin }: LoginProps) {
     setError(null);
 
     try {
-      const matches = await getMatchIdsForSummoner(summonerName, region);
-      if (matches instanceof Error) {
-        throw matches;
+      const matchIdsResponse = await getMatchIdsResponseForSummoner(summonerName, region);
+      if (matchIdsResponse instanceof Error) {
+        throw matchIdsResponse;
       }
+
+      const results = await Promise.allSettled(
+        matchIdsResponse.matchIds.map((id) => getMatchInfoForSummonerMatch(summonerName, region, id, matchIdsResponse.puuid))
+        );
+
+      const matches: MatchInfo[] = results
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => result.value as MatchInfo);
+
+      console.log("Fetched matches:", matches);
 
       onLogin(summonerName, region, matches);
     } catch (error) {
