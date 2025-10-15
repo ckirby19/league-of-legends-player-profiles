@@ -23,7 +23,6 @@ async function fetchMatchInfoFromApi(matchId: string, summonerName: string, regi
         const matchInfo = data as MatchInfo;
         saveMatchInfoToS3(summonerName, region, matchId, matchInfo);
 
-        console.log("Fetched match info:", matchInfo);
         return matchInfo;
     } catch (error) {
         throw new Error("Summoner not found. Please check the name and tag.");
@@ -63,7 +62,6 @@ export async function getMatchInfoForSummonerMatch(summonerName: string, region:
     // First check S3 bucket for cached data for summoner
     const cachedData = await fetchMatchInfoFromS3(summonerName, region, matchId);
     if (cachedData) {
-        console.log("Using cached data from S3:", cachedData);
         return cachedData;
     }
 

@@ -33,8 +33,6 @@ export function Login({ onLogin }: LoginProps) {
         .filter((result) => result.status === "fulfilled")
         .map((result) => result.value as MatchInfo);
 
-      console.log("Fetched matches:", matches);
-
       onLogin(summonerName, region, matches);
     } catch (error) {
       setError("Could not find summoner. Please check the name and tag.");

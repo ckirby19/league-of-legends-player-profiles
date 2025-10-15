@@ -18,7 +18,6 @@ async function fetchMatchTimelineFromApi(
             throw new Error("Match not found.");
         }
         const data = await res.json();
-        console.log("Lambda output:", data);
 
         if (!data || data.length === 0) {
             throw new Error("Match not found.");
