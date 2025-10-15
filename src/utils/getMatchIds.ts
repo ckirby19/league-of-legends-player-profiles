@@ -18,8 +18,6 @@ async function fetchMatchIdsFromApi(summonerName: string, region: string): Promi
         if (!data || data.length === 0) {
             throw new Error("Summoner not found. Please check the name and tag.");
         }
-        // Cache the fetched data in S3 for future requests
-        console.log("Fetched match IDs:", data);
         const matchIds = data as MatchIdsResponse;
 
         return matchIds;
