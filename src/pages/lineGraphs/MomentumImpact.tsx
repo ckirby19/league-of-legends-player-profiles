@@ -27,6 +27,7 @@ export const MomentumImpactChart = ({ data, currentMinute }: MomentumImpactChart
         name="Momentum Impact"
       />
       <ReferenceLine x={currentMinute} stroke="red" />
+      <ReferenceLine y={0} stroke="white" strokeDasharray="5 5" />
     </LineChart>
   </ResponsiveContainer>
 );

@@ -31,13 +31,13 @@ export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelec
       <ul>
         {matches.map((m) => (
           <motion.li
-            key={m.match_id}
+            key={m.matchId}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => onSelect(m.match_id)}
+            onClick={() => onSelect(m.matchId)}
             className={`px-4 py-3 cursor-pointer border-b border-gray-800 hover:bg-neutral-800
-              ${m.match_id === selectedMatchId ? "bg-neutral-700" : ""}
+              ${m.matchId === selectedMatchId ? "bg-neutral-700" : ""}
               ${m.win ? "text-green-400" : "text-red-400"}`}
           >
             <div className="flex justify-between items-center">

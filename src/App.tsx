@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { MatchInfoResponse } from "./utils/types";
 import { Login } from "./pages/Login";
 import { PlayerDashboard } from "./pages/PlayerDashboard";
+import { MatchInfo } from "./utils/types";
 
 function App() {
-  const [matches, setMatches] = useState<MatchInfoResponse | null>(null);
+  const [matches, setMatches] = useState<MatchInfo[] | null>(null);
   const [summonerName, setSummonerName] = useState<string>("");
   const [region, setRegion] = useState<string | null>(null);
 
-  function onLogin(summonerName: string, region: string, matches: MatchInfoResponse) {
+  function onLogin(summonerName: string, region: string, matches: MatchInfo[]) {
     setSummonerName(summonerName);
     setRegion(region);
     setMatches(matches);
@@ -27,7 +27,7 @@ function App() {
       : <PlayerDashboard
           playerName={summonerName}
           region={region!}
-          matches={matches!.match_info} 
+          matches={matches!} 
           onLogout={onLogout}
         />}
     </div>

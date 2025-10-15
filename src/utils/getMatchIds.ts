@@ -1,10 +1,9 @@
-import { MatchInfoResponse } from "./types";
-import { downloadData, uploadData } from "@aws-amplify/storage";
+import { MatchIdsResponse } from "./types";
 
-async function fetchMatchIdsFromApi(summonerName: string, region: string): Promise<MatchInfoResponse | Error> {
+async function fetchMatchIdsFromApi(summonerName: string, region: string): Promise<MatchIdsResponse | Error> {
     try {
         const res = await fetch(
-            "https://xzbgxt4nchpvoirutenu25mc640rfhwd.lambda-url.eu-west-2.on.aws/",
+            "https://643gadjzjgkvjjttooabzekobm0shxfe.lambda-url.eu-west-2.on.aws/",
             {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -20,53 +19,16 @@ async function fetchMatchIdsFromApi(summonerName: string, region: string): Promi
             throw new Error("Summoner not found. Please check the name and tag.");
         }
         // Cache the fetched data in S3 for future requests
-        const matchInfo = data as MatchInfoResponse;
-        saveMatchIdsToS3(summonerName, region, matchInfo);
+        console.log("Fetched match IDs:", data);
+        const matchIds = data as MatchIdsResponse;
 
-        console.log("Fetched match info:", matchInfo);
-        return matchInfo;
+        return matchIds;
     } catch (error) {
         throw new Error("Summoner not found. Please check the name and tag.");
     }
 }
 
-async function saveMatchIdsToS3(summonerName: string, region: string, matchInfo: MatchInfoResponse): Promise<void> {
-    // Implement S3 fetch logic here
-    await uploadData({
-        path: `player-match-data/${region}/${summonerName}/match_info.json`,
-        data: JSON.stringify(matchInfo),
-        options: {
-            contentType: "application/json",
-            bucket: "playerDashboardStorage"
-        }
-    }).result;    
-}
+export async function getMatchIdsResponseForSummoner(summonerName: string, region: string): Promise<MatchIdsResponse | Error> {
 
-async function fetchMatchIdsFromS3(summonerName: string, region: string): Promise<MatchInfoResponse | null> {
-  try {
-    const { body } = await downloadData({
-      path: `player-match-data/${region}/${summonerName}/match_info.json`,
-      options: {
-        bucket: "playerDashboardStorage",
-      },
-    }).result;
-
-    const data = await body.text();
-    return JSON.parse(data) as MatchInfoResponse;
-  } catch (err) {
-    console.error("Error fetching from S3:", err);
-    return null;
-  }
-}
-
-export async function getMatchIdsForSummoner(summonerName: string, region: string): Promise<MatchInfoResponse | Error> {
-    // First check S3 bucket for cached data for summoner
-    const cachedData = await fetchMatchIdsFromS3(summonerName, region);
-    if (cachedData) {
-        console.log("Using cached data from S3:", cachedData);
-        return cachedData;
-    }
-
-    // If not found, then call fetchMatchIds
     return await fetchMatchIdsFromApi(summonerName, region);
 }
