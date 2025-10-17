@@ -19,7 +19,7 @@ async function fetchMatchTimelineFromApi(
             throw new Error("Match timeline not found.");
         }
         // Cache the fetched data in S3 for future requests
-        const matchTimeline = data as TimelineData;
+        const matchTimeline = data.timeline as TimelineData;
         saveMatchTimelineToS3(summonerName, region, matchId, matchTimeline);
 
         return matchTimeline;
