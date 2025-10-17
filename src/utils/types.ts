@@ -140,7 +140,7 @@ export interface MatchInfo {
   deaths: number;
   assists: number;
   win: boolean;
-  playerTeamId: number; // 100 or 200
+  playerTeamId: string; // 100 or 200
   playerTeamParticipants: string[]; // puuids
   enemyTeamParticipants: string[];  // puuids
 }
