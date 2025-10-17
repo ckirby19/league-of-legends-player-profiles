@@ -1,26 +1,22 @@
 import { TimelineData } from "./types";
 import { downloadData, uploadData } from "@aws-amplify/storage";
+import { generateClient } from "aws-amplify/api";
+import { Schema } from "amplify/data/resource";
+
+const client = generateClient<Schema>({ authMode: "apiKey" });
 
 async function fetchMatchTimelineFromApi(
     matchId: string,
     summonerName: string,
     region: string): Promise<TimelineData | Error> {
     try {
-        const res = await fetch(
-            "https://jh6qlgen4xq2ubkc5k7gh43uca0floib.lambda-url.eu-west-2.on.aws/",
-            {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ matchId, region }),
-            }
-        );
-        if (!res.ok) {
-            throw new Error("Match not found.");
-        }
-        const data = await res.json();
+        const { data, errors } = await client.queries.getMatchTimeline({
+            matchId,
+            region,
+        });
 
-        if (!data || data.length === 0) {
-            throw new Error("Match not found.");
+        if (errors || !data) {
+            throw new Error("Match timeline not found.");
         }
         // Cache the fetched data in S3 for future requests
         const matchTimeline = data as TimelineData;

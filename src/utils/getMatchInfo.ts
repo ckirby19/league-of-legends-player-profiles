@@ -1,24 +1,22 @@
 import { MatchInfo } from "./types";
 import { downloadData, uploadData } from "@aws-amplify/storage";
+import { generateClient } from "aws-amplify/api";
+import { Schema } from "amplify/data/resource";
+
+const client = generateClient<Schema>({ authMode: "apiKey" });
 
 async function fetchMatchInfoFromApi(matchId: string, summonerName: string, region: string, puuid: string): Promise<MatchInfo | Error> {
     try {
-        const res = await fetch(
-            "https://xzbgxt4nchpvoirutenu25mc640rfhwd.lambda-url.eu-west-2.on.aws/",
-            {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ matchId, puuid, region }),
-            }
-        );
-        if (!res.ok) {
-            throw new Error("Summoner not found. Please check the name and tag.");
-        }
-        const data = await res.json();
+        const { data, errors } = await client.queries.getMatchInfo({
+            matchId,
+            puuid,
+            region,
+        });
 
-        if (!data || data.length === 0) {
-            throw new Error("Summoner not found. Please check the name and tag.");
+        if (errors || !data) {
+            throw new Error("Match info not found.");
         }
+
         // Cache the fetched data in S3 for future requests
         const matchInfo = data as MatchInfo;
         saveMatchInfoToS3(summonerName, region, matchId, matchInfo);

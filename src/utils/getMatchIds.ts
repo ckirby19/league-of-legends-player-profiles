@@ -1,23 +1,20 @@
 import { MatchIdsResponse } from "./types";
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../amplify/data/resource";
+
+const client = generateClient<Schema>({ authMode: "apiKey" });
 
 async function fetchMatchIdsFromApi(summonerName: string, region: string): Promise<MatchIdsResponse | Error> {
     try {
-        const res = await fetch(
-            "https://643gadjzjgkvjjttooabzekobm0shxfe.lambda-url.eu-west-2.on.aws/",
-            {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ summonerName, region }),
-            }
-        );
-        if (!res.ok) {
-            throw new Error("Summoner not found. Please check the name and tag.");
-        }
-        const data = await res.json();
+        const { data, errors } = await client.queries.getMatchIds({
+            summonerName,
+            region,
+        });
 
-        if (!data || data.length === 0) {
+        if (errors || !data) {
             throw new Error("Summoner not found. Please check the name and tag.");
         }
+
         const matchIds = data as MatchIdsResponse;
 
         return matchIds;
