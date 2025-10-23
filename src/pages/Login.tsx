@@ -27,7 +27,7 @@ export function Login({ onLogin }: LoginProps) {
 
       const results = await Promise.allSettled(
         matchIdsResponse.matchIds.map((id) => getMatchInfoForSummonerMatch(summonerName, region, id, matchIdsResponse.puuid))
-        );
+      );
 
       const matches: MatchInfo[] = results
         .filter((result) => result.status === "fulfilled")

@@ -11,7 +11,11 @@ async function fetchMatchIdsFromApi(summonerName: string, region: string): Promi
             region,
         });
 
-        if (errors || !data) {
+        if (errors){
+          throw new Error(`${errors.map(e => e.message).join(", ")}`);
+        }
+
+        if (!data) {
             throw new Error("Summoner not found. Please check the name and tag.");
         }
 
