@@ -1,5 +1,5 @@
 // utils/computeMomentum.ts
-import { TimelineData, MinuteSummary, Frame, TimelineEvent, ChampionKillEvent, WardPlacedEvent, WardKillEvent, BuildingKillEvent, EliteMonsterKillEvent, PlayerEvent, OriginalMapDimension, DisplayMapDimension, MatchInfo } from "./types";
+import { TimelineData, MinuteSummary, Frame, TimelineEvent, ChampionKillEvent, WardPlacedEvent, WardKillEvent, BuildingKillEvent, EliteMonsterKillEvent, PlayerEvent, OriginalMapDimension, DisplayMapDimension, MatchInfo, ParticipantFrame } from "./types";
 
 function computeAdvantage(team1: number, team2: number): number {
   if (team1 + team2 === 0) return 0;
@@ -10,12 +10,21 @@ function pythagoreanExpectation(team1: number, team2: number, x: number): number
   return Math.pow(team1, x) / (Math.pow(team1, x) + Math.pow(team2, x));
 }
 
+function ensureParticipantFrames(
+  pf: Record<string, ParticipantFrame> | string
+): Record<string, ParticipantFrame> {
+  return typeof pf === "string" ? JSON.parse(pf) : pf;
+}
+
 export function computeMinuteSummaries(
   timeline: TimelineData,
   matchInfo: MatchInfo,
   x: number = 2 // exponent for Pythagorean expectation
 ): MinuteSummary[] {
-  const frames = timeline.info.frames;
+  const frames = timeline.frames.map(f => ({
+    ...f,
+    participantFrames: ensureParticipantFrames(f.participantFrames),
+  }));
 
   // Group frames by minute
   const minutes: Record<number, Frame[]> = {};
@@ -26,12 +35,12 @@ export function computeMinuteSummaries(
   });
 
   // Identify teams and player
-  const playerId = timeline.info.participants.find(p => p.puuid == matchInfo.playerPuuid)?.participantId;
+  const playerId = timeline.participants.find(p => p.puuid == matchInfo.playerPuuid)?.participantId;
   if (!playerId)
     throw new Error("Player not found in timeline participants");
 
-  const playerTeamIds = timeline.info.participants.filter(p => matchInfo.playerTeamParticipants.includes(p.puuid)).map(p => p.participantId);
-  const enemyTeamIds = timeline.info.participants.filter(p => matchInfo.enemyTeamParticipants.includes(p.puuid)).map(p => p.participantId);
+  const playerTeamIds = timeline.participants.filter(p => matchInfo.playerTeamParticipants.includes(p.puuid)).map(p => p.participantId.toString());
+  const enemyTeamIds = timeline.participants.filter(p => matchInfo.enemyTeamParticipants.includes(p.puuid)).map(p => p.participantId.toString());
 
   const summaries: MinuteSummary[] = [];
 

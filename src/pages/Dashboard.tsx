@@ -40,7 +40,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
         }
   
       } catch (error) {
-        console.log("Error fetching timeline");
+        console.log("Error fetching timeline:", error);
         const res = await fetch(`/ExampleData/NA1_4916026624.json`);
         timeline = await res.json();
       } finally {
@@ -69,10 +69,6 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
       if (interval) clearInterval(interval);
     };
   }, [isPlaying, summaries.length]);
-
-  if (summaries.length === 0) {
-    return <div className="text-white">Loading...</div>;
-  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-4">

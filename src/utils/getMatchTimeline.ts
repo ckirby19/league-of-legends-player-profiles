@@ -15,7 +15,11 @@ async function fetchMatchTimelineFromApi(
             region,
         });
 
-        if (errors || !data) {
+        if (errors){
+          throw new Error(`Query errors: ${errors.map(e => e.message).join(", ")}`);
+        }
+
+        if (!data) {
             throw new Error("Match timeline not found.");
         }
         // Cache the fetched data in S3 for future requests
@@ -24,7 +28,7 @@ async function fetchMatchTimelineFromApi(
 
         return matchTimeline;
     } catch (error) {
-        throw new Error("Summoner not found. Please check the name and tag.");
+        throw new Error("Check error fetching match timeline: " + (error as Error).message);
     }
 }
 

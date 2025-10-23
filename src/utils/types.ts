@@ -1,11 +1,9 @@
 // types.ts
 export interface TimelineData {
-  info: {
-    frameInterval: number;
-    frames: Frame[];
-    gameId: number;
-    participants: Participant[];
-  };
+  frameInterval: number;
+  frames: Frame[];
+  gameId: number;
+  participants: Participant[];
 }
 
 export interface Participant {

@@ -20,9 +20,11 @@ function App() {
     setMatches(null);
   }
 
+  const isLoggedIn = !!summonerName && region !== null && matches !== null && matches.length > 0;
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      {!summonerName
+      {!isLoggedIn
       ? <Login onLogin={onLogin} />
       : <PlayerDashboard
           playerName={summonerName}

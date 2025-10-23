@@ -1,7 +1,32 @@
 import type { Schema } from "../../data/resource"
 import fetch from 'node-fetch';
 import { getRoutingValue } from '../common';
-import type { Json } from "@aws-amplify/data-schema";
+import type { ParticipantFrame, TimelineData } from "../../../src/utils/types";
+
+interface TimelineResponse {
+  metadata: {
+    dataVersion: string,
+    matchId: string,
+    participants: string[]
+  },
+  info: TimelineData
+}
+
+function normalizeParticipantFrames(
+  raw: Record<string, ParticipantFrame>
+): Record<string, ParticipantFrame> {
+  return Object.fromEntries(
+    Object.entries(raw).map(([id, pf]) => [
+      id,
+      {
+        participantId: pf.participantId,
+        position: pf.position,
+        totalGold: pf.totalGold,
+        xp: pf.xp,
+      },
+    ])
+  );
+}
 
 export const handler: Schema["getMatchTimeline"]["functionHandler"] = async (event) => {
   try {
@@ -26,7 +51,16 @@ export const handler: Schema["getMatchTimeline"]["functionHandler"] = async (eve
       throw new Error(`Failed to fetch timeline: ${res.status}`);
     }
 
-    const timeline = await res.json() as Json;
+    const raw = (await res.json()) as TimelineResponse;
+
+    const timeline: TimelineData = {
+      ...raw.info,
+      frames: raw.info.frames.map(frame => ({
+        timestamp: frame.timestamp,
+        events: frame.events,
+        participantFrames: normalizeParticipantFrames(frame.participantFrames),
+      })),
+    };
 
     return { timeline: timeline };
 

@@ -13,7 +13,11 @@ async function fetchMatchInfoFromApi(matchId: string, summonerName: string, regi
             region,
         });
 
-        if (errors || !data) {
+        if (errors){
+          throw new Error(`${errors.map(e => e.message).join(", ")}`);
+        }
+
+        if (!data) {
             throw new Error("Match info not found.");
         }
 
@@ -23,7 +27,7 @@ async function fetchMatchInfoFromApi(matchId: string, summonerName: string, regi
 
         return matchInfo;
     } catch (error) {
-        throw new Error("Summoner not found. Please check the name and tag.");
+        throw new Error(`${error}`);
     }
 }
 
