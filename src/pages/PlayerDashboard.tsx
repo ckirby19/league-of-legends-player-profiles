@@ -22,7 +22,7 @@ export function PlayerDashboard({ playerName, region, matches, onLogout }: Playe
         onLogout={onLogout}
       />
 
-      <div className="flex bg-gray-950 text-white" style={{ height: "100vh" }}>
+      <div className="flex bg-gray-950 text-white">
         <MatchSelector
           matches={matches}
           selectedMatchId={selectedMatch.matchOverview.matchId}

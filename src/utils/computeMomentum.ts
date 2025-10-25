@@ -1,5 +1,19 @@
-// utils/computeMomentum.ts
-import { TimelineData, MinuteSummary, TimelineEvent, ChampionKillEvent, BuildingKillEvent, EliteMonsterKillEvent, OriginalMapDimension, DisplayMapDimension, ParticipantFrame, MatchTimelineSummary, KeyEvent, ProbabilityChange, MatchInfo } from "./types";
+import {
+  TimelineData,
+  MinuteSummary,
+  TimelineEvent,
+  ChampionKillEvent,
+  BuildingKillEvent,
+  EliteMonsterKillEvent,
+  OriginalMapDimension,
+  DisplayMapDimension,
+  ParticipantFrame,
+  MatchTimelineSummary,
+  KeyEvent,
+  ProbabilityChange,
+  MatchInfo,
+  MatchSummary
+} from "./types";
 
 function computeAdvantage(team1: number, team2: number): number {
   if (team1 + team2 === 0) return 0;
@@ -24,17 +38,16 @@ function scalePosition(pos: { x: number; y: number } | undefined) {
   };
 }
 
-export function computeMatchTimelineSummary(
+export function computeMatchSummary(
   timeline: TimelineData,
   matchInfo: MatchInfo,
   x: number = 2, // exponent for Pythagorean expectation
-  topNKeyEvents: number = 5 // number of key events to extract
-): MatchTimelineSummary {
+  topNKeyEvents: number = 10 // number of key events to extract
+): MatchSummary {
   const frames = timeline.frames.map(f => ({
     ...f,
     participantFrames: ensureParticipantFrames(f.participantFrames),
   }));
-
 
   // Identify teams and player
   const playerId = timeline.participants.find(p => p.puuid == matchInfo.playerPuuid)?.participantId;
@@ -194,8 +207,13 @@ export function computeMatchTimelineSummary(
   events.sort((a, b) => Math.abs(b.playerTeamProbabilityChange.delta) - Math.abs(a.playerTeamProbabilityChange.delta));
   const topEvents = events.slice(0, topNKeyEvents);
 
-  return {
+  const matchTimelineSummary: MatchTimelineSummary = {
     playerTeamTimeline: summaries,
-    keyEvents: topEvents
-  } as MatchTimelineSummary;
+    keyEvents: topEvents,
+  };
+
+  return {
+    matchOverview: matchInfo.matchOverview,
+    matchTimelineSummary: matchTimelineSummary
+  } as MatchSummary;
 }

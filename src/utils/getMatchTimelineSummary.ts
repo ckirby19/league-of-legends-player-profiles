@@ -1,22 +1,26 @@
-import { MatchInfo, MatchTimelineSummary, TimelineData } from "./types";
+import { MatchInfo, MatchSummary, TimelineData } from "./types";
 import { downloadData, uploadData } from "@aws-amplify/storage";
-import { computeMatchTimelineSummary } from "./computeMomentum";
+import { computeMatchSummary } from "./computeMomentum";
 
-async function computeMatchSummary(
+async function compute(
   timelineData: TimelineData,
   matchInfo: MatchInfo,
   summonerName: string,
   region: string,
-  matchId: string): Promise<MatchTimelineSummary | Error> {
-    const timelineSummary = computeMatchTimelineSummary(timelineData, matchInfo)
+  matchId: string): Promise<MatchSummary | Error> {
+    const timelineSummary = computeMatchSummary(timelineData, matchInfo)
     await saveMatchSummaryToS3(summonerName, region, matchId, timelineSummary);
     return timelineSummary;
 }
 
-async function saveMatchSummaryToS3(summonerName: string, region: string, matchId: string, matchTimelineSummary: MatchTimelineSummary): Promise<void> {
+async function saveMatchSummaryToS3(
+  summonerName: string,
+  region: string,
+  matchId: string,
+  matchSummary: MatchSummary): Promise<void> {
     await uploadData({
         path: `player-match-data/${region}/${summonerName}/${matchId}/match_summary.json`,
-        data: JSON.stringify(matchTimelineSummary),
+        data: JSON.stringify(matchSummary),
         options: {
             contentType: "application/json",
             bucket: "playerDashboardStorage"
@@ -27,7 +31,7 @@ async function saveMatchSummaryToS3(summonerName: string, region: string, matchI
 async function fetchMatchSummaryFromS3(
   summonerName: string,
   region: string,
-  matchId: string): Promise<MatchTimelineSummary | null> {
+  matchId: string): Promise<MatchSummary | null> {
     try {
       const { body } = await downloadData({
         path: `player-match-data/${region}/${summonerName}/${matchId}/match_summary.json`,
@@ -37,7 +41,7 @@ async function fetchMatchSummaryFromS3(
       }).result;
 
       const data = await body.text();
-      return JSON.parse(data) as MatchTimelineSummary;
+      return JSON.parse(data) as MatchSummary;
     } catch (err) {
       console.error("Error fetching from S3:", err);
       return null;
@@ -49,13 +53,13 @@ export async function getMatchTimelineSummaryForSummonerMatch(
   matchInfo: MatchInfo,
   summonerName: string,
   region: string,
-  matchId: string): Promise<MatchTimelineSummary | Error> {
+  matchId: string): Promise<MatchSummary | Error> {
     // First check S3 bucket for cached data for summoner
     const cachedData = await fetchMatchSummaryFromS3(summonerName, region, matchId);
     if (cachedData) {
         return cachedData;
     }
 
-    // If not found, then call computeMatchSummary
-    return await computeMatchSummary(timelineData, matchInfo, matchId, summonerName, region);
+    // If not found, then call compute
+    return await compute(timelineData, matchInfo, summonerName, region, matchId);
 }
