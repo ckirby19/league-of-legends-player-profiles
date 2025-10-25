@@ -135,7 +135,6 @@ export interface MatchIdsResponse {
 export const OriginalMapDimension = 16000; // Original map size in Riot data
 export const DisplayMapDimension = 400;    // Display size in pixels
 
-
 /// Defining a new schema which will be used for the match summary data to go to LLMs
 
 export interface MatchSummary {
