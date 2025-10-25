@@ -6,9 +6,9 @@ import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
 import { AdvantageChart } from "./lineGraphs/Advantage";
 import { MapVisualizer } from "./MapVisualizer";
 import { TimelineControls } from "./TimelineControls";
-import { MatchInfo, MinuteSummary, TimelineData } from "../utils/types";
-import { computeMinuteSummaries } from "@/utils/computeMomentum";
+import { MatchInfo, MatchTimelineSummary, MinuteSummary, TimelineData } from "../utils/types";
 import { getMatchTimelineForSummonerMatch } from "@/utils/getMatchTimeline";
+import { getMatchTimelineSummaryForSummonerMatch } from "@/utils/getMatchTimelineSummary";
 
 interface DashboardProps {
   matchInfo: MatchInfo;
@@ -27,9 +27,10 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
   useEffect(() => {
     async function loadTimeline() {
       let timeline: TimelineData;
+      let matchTimelineSummary: MatchTimelineSummary;
       setLoading(true);
       try {
-        const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchInfo.matchId);
+        const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchInfo.matchOverview.matchId);
         if (fetchedTimeline instanceof Error) {
           console.log("Error fetching timeline:", fetchedTimeline.message);
           const res = await fetch(`/ExampleData/NA1_4916026624.json`);
@@ -37,6 +38,22 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
         }
         else{
           timeline = fetchedTimeline;
+
+          const summary = await getMatchTimelineSummaryForSummonerMatch(
+            timeline,
+            matchInfo,
+            summonerName,
+            region,
+            matchInfo.matchOverview.matchId
+          );
+
+          if (summary instanceof Error) {
+            throw new Error("Error computing timeline summary: " + summary.message);
+          }
+          else{
+            matchTimelineSummary = summary;
+            setSummaries(matchTimelineSummary.playerTeamTimeline);
+          }
         }
   
       } catch (error) {
@@ -47,8 +64,6 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
         setLoading(false);
       }
 
-      const parsed = computeMinuteSummaries(timeline!, matchInfo);
-      setSummaries(parsed);
     }
 
     loadTimeline();
@@ -81,7 +96,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
           className="flex-2"
         >
           <Card className="bg-neutral-900 text-white w-full">
-            <CardContent className="pt-2">
+            <CardContent className="pt-4">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Player Team Advantage</h3>
                 <AdvantageChart data={summaries} currentMinute={currentMinute} />
@@ -106,7 +121,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
           className="flex-1"
         >
           <Card className="bg-neutral-900 text-white w-full h-full">
-            <CardContent className="pt-2">
+            <CardContent className="pt-4">
               <h3 className="text-lg font-semibold mb-2">Map Visualizer - Player Position</h3>
               <div className="w-full aspect-square">
                 <MapVisualizer

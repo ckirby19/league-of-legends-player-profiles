@@ -15,25 +15,24 @@ export function PlayerDashboard({ playerName, region, matches, onLogout }: Playe
   const [selectedMatch, setSelectedMatch] = useState(matches[0]);
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <Banner
         playerName={playerName}
         playerLogo="/player_logo.png"
         onLogout={onLogout}
       />
-      <div className="flex min-h-screen bg-gray-950 text-white">
-        {/* Left navbar */}
+
+      <div className="flex bg-gray-950 text-white" style={{ height: "100vh" }}>
         <MatchSelector
           matches={matches}
-          selectedMatchId={selectedMatch.matchId}
+          selectedMatchId={selectedMatch.matchOverview.matchId}
           onSelect={(id) => {
-            const match = matches.find((m) => m.matchId === id);
-            setSelectedMatch(match!);
+            const match = matches.find((m) => m.matchOverview.matchId === id);
+            if (match) setSelectedMatch(match);
           }}
         />
 
-        {/* Right dashboard */}
-        <div className="flex-1 p-1 bg-black overflow-y-auto">
+        <div className="flex-1 p-1 bg-gray-950">
           <Dashboard
             matchInfo={selectedMatch}
             summonerName={playerName}

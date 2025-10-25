@@ -4,30 +4,65 @@ import { getMatchInfo as getMatchInfoFn } from "../functions/get-match-info/reso
 import { getMatchTimeline as getMatchTimelineFn } from "../functions/get-match-timeline/resource";
 
 const schema = a.schema({
-  MatchInfoResult: a.customType({
+  MatchIdsResult: a.customType({
     puuid: a.string(),
     matchIds: a.string().array(),
   }),
-  MatchInfo: a.customType({
+  MatchInfoResult: a.customType({
     playerPuuid: a.string(),
-    matchId: a.string(),
-    gameMode: a.string(),
-    queueId: a.integer(),
-    gameDuration: a.integer(),
-    gameEndTimestamp: a.float(),
-    championName: a.string(),
-    kills: a.integer(),
-    deaths: a.integer(),
-    assists: a.integer(),
-    win: a.boolean(),
+    matchOverview: a.ref("MatchOverview"),
+    teamStats: a.ref("Teams"),
     playerTeamId: a.string(),
     playerTeamParticipants: a.string().array(),
     enemyTeamParticipants: a.string().array(),
+    playerStats: a.ref("ParticipantStats"),
   }),
-  // Timeline data types
-  Participant: a.customType({
-    participantId: a.integer(),
+  MatchOverview: a.customType({
+    matchId: a.string(),
+    gameMode: a.string(),
+    gameDuration: a.integer(), // in seconds
+    gameEndTimestamp: a.float(), // epoch ms
+  }),
+  Teams: a.customType({
+    playerTeam: a.ref("TeamStats"),
+    enemyTeam: a.ref("TeamStats"),
+  }),
+  TeamStats: a.customType({
+    totalKills: a.integer(),
+    totalDeaths: a.integer(),
+    totalAssists: a.integer(),
+    objectives: a.ref("Objectives"),
+    participants: a.ref("ParticipantStats").array(),
+  }),
+  Objectives: a.customType({
+    barons: a.integer(),
+    champions: a.integer(),
+    dragons: a.integer(),
+    hordes: a.integer(),
+    inhibitors: a.integer(),
+    riftHeralds: a.integer(),
+    towers: a.integer(),
+  }),
+  ParticipantStats: a.customType({
     puuid: a.string(),
+    role: a.string(),
+    championName: a.string(),
+    win: a.boolean(),
+    teamId: a.string(), // 100 or 200
+    kills: a.integer(),
+    deaths: a.integer(),
+    assists: a.integer(),
+    level: a.integer(),
+    totalGold: a.integer(),
+    totalMinionsKilled: a.integer(),
+    totalDamageDealt: a.integer(),
+    totalDamageTaken: a.integer(),
+    visionScore: a.integer(),
+  }),
+
+  // Timeline data types
+  MatchTimelineResult: a.customType({
+    timeline: a.ref("TimelineData")
   }),
   ParticipantFrame: a.customType({
     participantId: a.integer(),
@@ -93,8 +128,9 @@ const schema = a.schema({
     gameId: a.float(),
     participants: a.ref("Participant").array(),
   }),
-  MatchTimeline: a.customType({
-    timeline: a.ref("TimelineData")
+  Participant: a.customType({
+    participantId: a.integer(),
+    puuid: a.string(),
   }),
   getMatchIds: a
     .query()
@@ -102,7 +138,7 @@ const schema = a.schema({
       summonerName: a.string(),
       region: a.string(),
     })
-    .returns(a.ref("MatchInfoResult"))
+    .returns(a.ref("MatchIdsResult"))
     .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
     .handler(a.handler.function(getMatchIdsFn)),
   getMatchInfo: a
@@ -112,7 +148,7 @@ const schema = a.schema({
       puuid: a.string(),
       region: a.string(),
     })
-    .returns(a.ref("MatchInfo"))
+    .returns(a.ref("MatchInfoResult"))
     .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
     .handler(a.handler.function(getMatchInfoFn)),
   getMatchTimeline: a
@@ -121,7 +157,7 @@ const schema = a.schema({
       matchId: a.string(),
       region: a.string(),
     })
-    .returns(a.ref("MatchTimeline"))
+    .returns(a.ref("MatchTimelineResult"))
     .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
     .handler(a.handler.function(getMatchTimelineFn)),
 });

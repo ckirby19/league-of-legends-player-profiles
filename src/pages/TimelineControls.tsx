@@ -31,7 +31,7 @@ export const TimelineControls = ({
         max={duration}
         step={1}
         onValueChange={(val: number[]) => onSeek(val[0])}
-        className="w-96"
+        className="w-96 bg-gray-200 dark:bg-gray-700 h-2 rounded-lg px-1"
       />
     </div>
   );

@@ -8,20 +8,47 @@ interface MatchResponse {
 
 interface MatchInfoDto {
   gameMode: string;
-  queueId: number;
   gameDuration: number; // seconds
   gameEndTimestamp: number; // epoch ms
   participants: ParticipantDto[]
+  teams: TeamDto[]
 }
 
 interface ParticipantDto {
-  teamId: string
+  puuid: string;
+  role: string;
   championName: string;
+  win: boolean;
+  teamId: string; // 100 or 200
   kills: number;
   deaths: number;
   assists: number;
+  summonerLevel: number;
+  goldEarned: number;
+  totalMinionsKilled: number;
+  totalDamageDealt: number;
+  totalDamageTaken: number;
+  visionScore: number;
+}
+
+interface TeamDto {
+  teamId: string; // 100 or 200
   win: boolean;
-  puuid: string
+  objectives: ObjectivesDto;
+}
+
+interface ObjectivesDto {
+  baron: ObjectiveDto;
+  champion: ObjectiveDto;
+  dragon: ObjectiveDto;
+  horde: ObjectiveDto;
+  inhibitor: ObjectiveDto;
+  riftHerald: ObjectiveDto;
+  tower: ObjectiveDto;
+}
+
+interface ObjectiveDto {
+  kills: number;
 }
 
 export const handler: Schema["getMatchInfo"]["functionHandler"] = async (event) => {
@@ -49,38 +76,82 @@ export const handler: Schema["getMatchInfo"]["functionHandler"] = async (event) 
 
     const matchData = (await matchRes.json()) as MatchResponse;
     const info = matchData.info;
-    const participant = info.participants.find((p: ParticipantDto) => p.puuid === puuid);
+    const playerParticipant = info.participants.find((p: ParticipantDto) => p.puuid === puuid);
 
-    if (!participant) throw new Error("Participant not found");
+    if (!playerParticipant) throw new Error("Participant not found");
 
-    const playerTeamId = participant.teamId;
-    const playerTeamParticipants: string[] = [];
-    const enemyTeamParticipants: string[] = [];
+    const playerTeamId = playerParticipant.teamId;
+    const playerTeamParticipants: ParticipantDto[] = [];
+    const enemyTeamParticipants: ParticipantDto[] = [];
 
     for (const p of info.participants) {
       if (p.teamId === playerTeamId) {
-        playerTeamParticipants.push(p.puuid);
+        playerTeamParticipants.push(p);
       } else {
-        enemyTeamParticipants.push(p.puuid);
+        enemyTeamParticipants.push(p);
       }
     }
 
-    return {
-      playerPuuid: puuid,
-      matchId,
+    const playerTeam = info.teams.find(t => t.teamId === playerTeamId);
+    const enemyTeam = info.teams.find(t => t.teamId !== playerTeamId);
+
+    if (!playerTeam || !enemyTeam)
+      throw new Error("Team data not found");
+
+    // Conversion into the MatchInfo type
+    const matchOverview = {
+      matchId: matchId,
       gameMode: info.gameMode,
-      queueId: info.queueId,
       gameDuration: info.gameDuration,
       gameEndTimestamp: info.gameEndTimestamp,
-      championName: participant.championName,
-      kills: participant.kills,
-      deaths: participant.deaths,
-      assists: participant.assists,
-      win: participant.win,
-      playerTeamId,
-      playerTeamParticipants,
-      enemyTeamParticipants,
     };
+
+    const playerTeamStats = {
+      totalKills: playerTeamParticipants.reduce((sum, p) => sum + p.kills, 0),
+      totalDeaths: playerTeamParticipants.reduce((sum, p) => sum + p.deaths, 0),
+      totalAssists: playerTeamParticipants.reduce((sum, p) => sum + p.assists, 0),
+      objectives: {
+        barons: playerTeam.objectives.baron.kills,
+        champions: playerTeam.objectives.champion.kills,
+        dragons: playerTeam.objectives.dragon.kills,
+        hordes: playerTeam.objectives.horde.kills,
+        inhibitors: playerTeam.objectives.inhibitor.kills,
+        riftHeralds: playerTeam.objectives.riftHerald.kills,
+        towers: playerTeam.objectives.tower.kills,
+      },
+      participants: playerTeamParticipants,
+    };
+
+    const enemyTeamStats = {
+      totalKills: enemyTeamParticipants.reduce((sum, p) => sum + p.kills, 0),
+      totalDeaths: enemyTeamParticipants.reduce((sum, p) => sum + p.deaths, 0),
+      totalAssists: enemyTeamParticipants.reduce((sum, p) => sum + p.assists, 0),
+      objectives: {
+        barons: enemyTeam.objectives.baron.kills,
+        champions: enemyTeam.objectives.champion.kills,
+        dragons: enemyTeam.objectives.dragon.kills,
+        hordes: enemyTeam.objectives.horde.kills,
+        inhibitors: enemyTeam.objectives.inhibitor.kills,
+        riftHeralds: enemyTeam.objectives.riftHerald.kills,
+        towers: enemyTeam.objectives.tower.kills,
+      },
+      participants: enemyTeamParticipants,
+    };
+
+    const matchInfo = {
+      playerPuuid: puuid,
+      matchOverview: matchOverview,
+      teamStats: {
+        playerTeam: playerTeamStats,
+        enemyTeam: enemyTeamStats,
+      },
+      playerTeamId: playerTeamId,
+      playerTeamParticipants: playerTeamParticipants.map(p => p.puuid),
+      enemyTeamParticipants: enemyTeamParticipants.map(p => p.puuid),
+      playerStats: playerParticipant,
+    };
+
+    return matchInfo;
 
   } catch (err) {
     throw new Error('Internal server error');
