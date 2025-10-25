@@ -127,22 +127,6 @@ export interface PlayerEvent {
   description?: string; // e.g. "Killed Ahri", "Took Dragon"
 }
 
-// export interface MatchInfo {
-//   playerPuuid: string;
-//   matchId: string;
-//   gameMode: string;
-//   gameDuration: number; // seconds
-//   gameEndTimestamp: number; // epoch ms
-//   championName: string;
-//   kills: number;
-//   deaths: number;
-//   assists: number;
-//   win: boolean;
-//   playerTeamId: string; // 100 or 200
-//   playerTeamParticipants: string[]; // puuids
-//   enemyTeamParticipants: string[];  // puuids
-// }
-
 export interface MatchIdsResponse {
   puuid: string;
   matchIds: string[];
@@ -155,7 +139,7 @@ export const DisplayMapDimension = 400;    // Display size in pixels
 /// Defining a new schema which will be used for the match summary data to go to LLMs
 
 export interface MatchSummary {
-  matchOverview: MatchOverview;
+  matchInfo: MatchInfo;
   matchTimelineSummary: MatchTimelineSummary;
 }
 
@@ -174,8 +158,8 @@ export interface MatchInfo {
 export interface MatchOverview {
   matchId: string;
   gameMode: string;
-  gameDuration: number; // in seconds
-  gameEndTimestamp: number; // epoch ms
+  gameDurationSeconds: number; // in seconds
+  gameEndTimestampEpochMs: number; // epoch ms
 }
 
 export interface Teams {

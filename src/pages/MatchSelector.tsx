@@ -44,10 +44,10 @@ export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelec
           >
             <div className="flex justify-between items-center">
               <span className="font-bold">Champion: {m.playerStats.championName}</span>
-              <span className="text-sm">{Math.floor(m.matchOverview.gameDuration / 60)}m</span>
+              <span className="text-sm">{Math.floor(m.matchOverview.gameDurationSeconds / 60)}m</span>
             </div>
             <div className="text-xs text-gray-400">
-              {m.matchOverview.gameMode} • {m.playerStats.kills}/{m.playerStats.deaths}/{m.playerStats.assists} KDA • {timeSince(m.matchOverview.gameEndTimestamp)}
+              {m.matchOverview.gameMode} • {m.playerStats.kills}/{m.playerStats.deaths}/{m.playerStats.assists} KDA • {timeSince(m.matchOverview.gameEndTimestampEpochMs)}
             </div>
           </motion.li>
         ))}

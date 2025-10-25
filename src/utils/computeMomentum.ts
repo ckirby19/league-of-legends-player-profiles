@@ -213,7 +213,7 @@ export function computeMatchSummary(
   };
 
   return {
-    matchOverview: matchInfo.matchOverview,
+    matchInfo: matchInfo,
     matchTimelineSummary: matchTimelineSummary
   } as MatchSummary;
 }
