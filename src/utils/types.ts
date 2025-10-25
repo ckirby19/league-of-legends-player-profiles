@@ -20,6 +20,7 @@ export interface Frame {
 export interface ParticipantFrame {
   participantId: number;
   position?: { x: number; y: number };
+  minionsKilled: number;
   totalGold: number;
   xp: number;
 }
@@ -27,12 +28,12 @@ export interface ParticipantFrame {
 export interface MinuteSummary {
   minute: number;
   advantage: number;          // normalized advantage
-  winProb: number;            // P_final(t)
-  momentumImpact?: number;    // ΔP between t and t+1
+  winProb: number;            // P(t)
+  momentumImpact?: number;    // P(t+1) - P(t)
   playerPosition?: { x: number; y: number };
-  playerEvents: PlayerEvent[];
-  goldAdvantage: number;      // team1Gold - team2Gold
-  xpAdvantage: number;        // team1XP - team2XP
+  goldAdvantage: number;      // playerTeamGold - enemyTeamGold
+  xpAdvantage: number;        // playerTeamXP - enemyTeamXP
+  creepScoreAdvantage: number; // playerTeamCreepScore - enemyTeamCreepScore
 }
 
 export type TimelineEvent =
@@ -126,22 +127,21 @@ export interface PlayerEvent {
   description?: string; // e.g. "Killed Ahri", "Took Dragon"
 }
 
-export interface MatchInfo {
-  playerPuuid: string;
-  matchId: string;
-  gameMode: string;
-  queueId: number;
-  gameDuration: number; // seconds
-  gameEndTimestamp: number; // epoch ms
-  championName: string;
-  kills: number;
-  deaths: number;
-  assists: number;
-  win: boolean;
-  playerTeamId: string; // 100 or 200
-  playerTeamParticipants: string[]; // puuids
-  enemyTeamParticipants: string[];  // puuids
-}
+// export interface MatchInfo {
+//   playerPuuid: string;
+//   matchId: string;
+//   gameMode: string;
+//   gameDuration: number; // seconds
+//   gameEndTimestamp: number; // epoch ms
+//   championName: string;
+//   kills: number;
+//   deaths: number;
+//   assists: number;
+//   win: boolean;
+//   playerTeamId: string; // 100 or 200
+//   playerTeamParticipants: string[]; // puuids
+//   enemyTeamParticipants: string[];  // puuids
+// }
 
 export interface MatchIdsResponse {
   puuid: string;
@@ -150,3 +150,91 @@ export interface MatchIdsResponse {
 
 export const OriginalMapDimension = 16000; // Original map size in Riot data
 export const DisplayMapDimension = 400;    // Display size in pixels
+
+
+/// Defining a new schema which will be used for the match summary data to go to LLMs
+
+export interface MatchSummary {
+  matchOverview: MatchOverview;
+  matchTimelineSummary: MatchTimelineSummary;
+}
+
+// MatchInfo
+
+export interface MatchInfo {
+  playerPuuid: string;
+  matchOverview: MatchOverview;
+  teamStats: Teams;
+  playerTeamId: string; // 100 or 200
+  playerTeamParticipants: string[]; // puuids
+  enemyTeamParticipants: string[];  // puuids
+  playerStats: ParticipantStats;
+}
+
+export interface MatchOverview {
+  matchId: string;
+  gameMode: string;
+  gameDuration: number; // in seconds
+  gameEndTimestamp: number; // epoch ms
+}
+
+export interface Teams {
+  playerTeam: TeamStats;
+  enemyTeam: TeamStats;
+}
+
+export interface TeamStats {
+  totalKills: number;
+  totalDeaths: number;
+  totalAssists: number;
+  objectives: Objectives;
+  participants: ParticipantStats[];
+}
+
+export interface Objectives {
+  barons: number;
+  champions: number;
+  dragons: number;
+  hordes: number;
+  inhibitors: number;
+  riftHeralds: number;
+  towers: number;
+}
+
+export interface ParticipantStats {
+  puuid: string;
+  role: string;
+  championName: string;
+  win: boolean;
+  teamId: string; // 100 or 200
+  kills: number;
+  deaths: number;
+  assists: number;
+  summonerLevel: number;
+  goldEarned: number;
+  totalMinionsKilled: number;
+  totalDamageDealt: number;
+  totalDamageTaken: number;
+  visionScore: number;
+}
+
+// MatchTimeline
+
+export interface MatchTimelineSummary {
+  playerTeamTimeline: MinuteSummary[];
+  keyEvents: KeyEvent[];
+}
+
+export interface KeyEvent {
+  matchClock: string; // "HH:MM:SS"
+  type: string; // e.g "Objective Secured"
+  position: { x: number; y: number }; // map coordinates of the event
+  description: string; // e.g. "Player team killed Ahri", "Enemy team took Dragon"
+  playerTeamProbabilityChange: ProbabilityChange;
+}
+
+export interface ProbabilityChange {
+  before: number;
+  after: number;
+  delta: number;
+}

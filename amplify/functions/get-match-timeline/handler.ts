@@ -21,6 +21,7 @@ function normalizeParticipantFrames(
       {
         participantId: pf.participantId,
         position: pf.position,
+        minionsKilled: pf.minionsKilled,
         totalGold: pf.totalGold,
         xp: pf.xp,
       },

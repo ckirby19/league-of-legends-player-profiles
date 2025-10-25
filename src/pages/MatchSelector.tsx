@@ -26,26 +26,28 @@ function timeSince(timestamp: number): string {
 
 export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelectorProps) {
   return (
-    <nav className="w-1/6 bg-neutral-900 text-white overflow-y-auto">
-      <h3 className="px-4 py-2 font-semibold border-b border-gray-700">Recent Games</h3>
-      <ul>
+    <nav className="w-64 bg-neutral-900 text-white flex flex-col h-full"> 
+      <div className="sticky top-0 z-10 bg-neutral-900 border-b border-gray-700">
+        <h3 className="px-4 py-2 font-semibold">20 Most Recent Games</h3>
+      </div>
+      <ul className="flex-1 overflow-y-auto overflow-y-scrollbar">
         {matches.map((m) => (
           <motion.li
-            key={m.matchId}
+            key={m.matchOverview.matchId}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => onSelect(m.matchId)}
+            onClick={() => onSelect(m.matchOverview.matchId)}
             className={`px-4 py-3 cursor-pointer border-b border-gray-800 hover:bg-neutral-800
-              ${m.matchId === selectedMatchId ? "bg-neutral-700" : ""}
-              ${m.win ? "text-green-400" : "text-red-400"}`}
+              ${m.matchOverview.matchId === selectedMatchId ? "bg-neutral-700" : ""}
+              ${m.playerStats.win ? "text-green-400" : "text-red-400"}`}
           >
             <div className="flex justify-between items-center">
-              <span className="font-bold">Champion: {m.championName}</span>
-              <span className="text-sm">{Math.floor(m.gameDuration / 60)}m</span>
+              <span className="font-bold">Champion: {m.playerStats.championName}</span>
+              <span className="text-sm">{Math.floor(m.matchOverview.gameDuration / 60)}m</span>
             </div>
             <div className="text-xs text-gray-400">
-              {m.gameMode} • {m.kills}/{m.deaths}/{m.assists} KDA • {timeSince(m.gameEndTimestamp)}
+              {m.matchOverview.gameMode} • {m.playerStats.kills}/{m.playerStats.deaths}/{m.playerStats.assists} KDA • {timeSince(m.matchOverview.gameEndTimestamp)}
             </div>
           </motion.li>
         ))}

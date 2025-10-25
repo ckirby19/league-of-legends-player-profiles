@@ -55,7 +55,6 @@ async function fetchMatchInfoFromS3(summonerName: string, region: string, matchI
     const data = await body.text();
     return JSON.parse(data) as MatchInfo;
   } catch (err) {
-    console.error("Error fetching from S3:", err);
     return null;
   }
 }
