@@ -102,8 +102,8 @@ export const handler: Schema["getMatchInfo"]["functionHandler"] = async (event) 
     const matchOverview = {
       matchId: matchId,
       gameMode: info.gameMode,
-      gameDuration: info.gameDuration,
-      gameEndTimestamp: info.gameEndTimestamp,
+      gameDurationSeconds: info.gameDuration,
+      gameEndTimestampEpochMs: info.gameEndTimestamp,
     };
 
     const playerTeamStats = {
