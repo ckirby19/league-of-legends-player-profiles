@@ -6,7 +6,7 @@ import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
 import { AdvantageChart } from "./lineGraphs/Advantage";
 import { MapVisualizer } from "./MapVisualizer";
 import { TimelineControls } from "./TimelineControls";
-import { MatchInfo, MatchTimelineSummary, MinuteSummary, TimelineData } from "../utils/types";
+import { MatchInfo, MatchSummary, MinuteSummary, TimelineData } from "../utils/types";
 import { getMatchTimelineForSummonerMatch } from "@/utils/getMatchTimeline";
 import { getMatchTimelineSummaryForSummonerMatch } from "@/utils/getMatchTimelineSummary";
 
@@ -27,7 +27,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
   useEffect(() => {
     async function loadTimeline() {
       let timeline: TimelineData;
-      let matchTimelineSummary: MatchTimelineSummary;
+      let matchSummary: MatchSummary;
       setLoading(true);
       try {
         const fetchedTimeline = await getMatchTimelineForSummonerMatch(summonerName, region, matchInfo.matchOverview.matchId);
@@ -51,8 +51,8 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
             throw new Error("Error computing timeline summary: " + summary.message);
           }
           else{
-            matchTimelineSummary = summary;
-            setSummaries(matchTimelineSummary.playerTeamTimeline);
+            matchSummary = summary;
+            setSummaries(matchSummary.matchTimelineSummary.playerTeamTimeline);
           }
         }
   
