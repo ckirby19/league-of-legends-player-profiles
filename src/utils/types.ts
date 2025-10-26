@@ -157,8 +157,8 @@ export interface MatchInfo {
 export interface MatchOverview {
   matchId: string;
   gameMode: string;
-  gameDurationSeconds: number; // in seconds
-  gameEndTimestampEpochMs: number; // epoch ms
+  gameDuration: number; // in seconds
+  gameEndTimestamp: number; // epoch ms
 }
 
 export interface Teams {

@@ -42,7 +42,7 @@ export function computeMatchSummary(
   timeline: TimelineData,
   matchInfo: MatchInfo,
   x: number = 2, // exponent for Pythagorean expectation
-  topNKeyEvents: number = 10 // number of key events to extract
+  topNKeyEvents: number = 15 // number of key events to extract
 ): MatchSummary {
   const frames = timeline.frames.map(f => ({
     ...f,
