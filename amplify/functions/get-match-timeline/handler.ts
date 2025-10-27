@@ -1,7 +1,7 @@
 import type { Schema } from "../../data/resource"
 import fetch from 'node-fetch';
 import { getRoutingValue } from '../common';
-import type { ParticipantFrame, TimelineData } from "../../../src/utils/types";
+import type { TimelineData } from "../../../src/utils/types";
 
 interface TimelineResponse {
   metadata: {
@@ -10,23 +10,6 @@ interface TimelineResponse {
     participants: string[]
   },
   info: TimelineData
-}
-
-function normalizeParticipantFrames(
-  raw: Record<string, ParticipantFrame>
-): Record<string, ParticipantFrame> {
-  return Object.fromEntries(
-    Object.entries(raw).map(([id, pf]) => [
-      id,
-      {
-        participantId: pf.participantId,
-        position: pf.position,
-        minionsKilled: pf.minionsKilled,
-        totalGold: pf.totalGold,
-        xp: pf.xp,
-      },
-    ])
-  );
 }
 
 export const handler: Schema["getMatchTimeline"]["functionHandler"] = async (event) => {
@@ -54,16 +37,7 @@ export const handler: Schema["getMatchTimeline"]["functionHandler"] = async (eve
 
     const raw = (await res.json()) as TimelineResponse;
 
-    const timeline: TimelineData = {
-      ...raw.info,
-      frames: raw.info.frames.map(frame => ({
-        timestamp: frame.timestamp,
-        events: frame.events,
-        participantFrames: normalizeParticipantFrames(frame.participantFrames),
-      })),
-    };
-
-    return { timeline: timeline };
+    return { timeline: raw.info };
 
   } catch (err) {
     throw new Error('Internal server error');
