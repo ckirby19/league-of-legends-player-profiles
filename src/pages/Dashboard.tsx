@@ -9,6 +9,7 @@ import { TimelineControls } from "./TimelineControls";
 import { MatchInfo, MatchSummary, MinuteSummary, TimelineData } from "../utils/types";
 import { getMatchTimelineForSummonerMatch } from "@/utils/getMatchTimeline";
 import { getMatchTimelineSummaryForSummonerMatch } from "@/utils/getMatchTimelineSummary";
+import { InsightsPanel } from "./InsightsPanel";
 
 interface DashboardProps {
   matchInfo: MatchInfo;
@@ -19,7 +20,8 @@ interface DashboardProps {
 
 export function Dashboard({ matchInfo, summonerName, region, mapSrc }: DashboardProps) {
   const [currentMinute, setCurrentMinute] = useState(0);
-  const [summaries, setSummaries] = useState<MinuteSummary[]>([]);
+  const [minuteSummaries, setMinuteSummaries] = useState<MinuteSummary[]>([]);
+  const [summary, setSummary] = useState<MatchSummary | null>(null);
   const [loading, setLoading] = useState(false);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -52,7 +54,8 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
           }
           else{
             matchSummary = summary;
-            setSummaries(matchSummary.matchTimelineSummary.playerTeamTimeline);
+            setSummary(matchSummary);
+            setMinuteSummaries(matchSummary.matchTimelineSummary.playerTeamTimeline);
           }
         }
   
@@ -75,7 +78,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentMinute((t) =>
-          t < summaries.length - 1 ? t + 1 : t
+          t < minuteSummaries.length - 1 ? t + 1 : t
         );
       }, 1000);
     }
@@ -83,7 +86,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isPlaying, summaries.length]);
+  }, [isPlaying, minuteSummaries.length]);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-4">
@@ -99,15 +102,15 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
             <CardContent className="pt-4">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Player Team Advantage</h3>
-                <AdvantageChart data={summaries} currentMinute={currentMinute} />
+                <AdvantageChart data={minuteSummaries} currentMinute={currentMinute} />
               </div>
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Player Team Win Probability</h3>
-                <WinProbChart data={summaries} currentMinute={currentMinute} />
+                <WinProbChart data={minuteSummaries} currentMinute={currentMinute} />
               </div>
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Momentum Impact</h3>
-                <MomentumImpactChart data={summaries} currentMinute={currentMinute} />
+                <MomentumImpactChart data={minuteSummaries} currentMinute={currentMinute} />
               </div>
             </CardContent>
           </Card>
@@ -126,17 +129,18 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
               <div className="w-full aspect-square">
                 <MapVisualizer
                   mapSrc={mapSrc}
-                  summaries={summaries}
+                  summaries={minuteSummaries}
                   currentMinute={currentMinute}
                 />
               </div>
               <TimelineControls
                 currentMinute={currentMinute}
-                duration={summaries.length - 1}
+                duration={minuteSummaries.length - 1}
                 isPlaying={isPlaying}
                 onPlayToggle={() => setIsPlaying((p) => !p)}
                 onSeek={setCurrentMinute}
               />
+              {summary && <InsightsPanel matchSummary={summary} />}
             </CardContent>
           </Card>
         </motion.div>

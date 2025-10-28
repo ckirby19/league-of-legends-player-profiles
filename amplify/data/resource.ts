@@ -2,6 +2,7 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { getMatchIds as getMatchIdsFn } from "../functions/get-match-ids/resource";
 import { getMatchInfo as getMatchInfoFn } from "../functions/get-match-info/resource";
 import { getMatchTimeline as getMatchTimelineFn } from "../functions/get-match-timeline/resource";
+import { getMatchSummaryInsights } from "../functions/get-match-summary-insight/resource";
 
 const schema = a.schema({
   MatchIdsResult: a.customType({
@@ -160,6 +161,14 @@ const schema = a.schema({
     .returns(a.ref("MatchTimelineResult"))
     .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
     .handler(a.handler.function(getMatchTimelineFn)),
+  generateMatchSummaryInsights: a
+    .query()
+    .arguments({
+      prompt: a.string().required(),
+    })
+    .returns(a.string())
+    .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
+    .handler(a.handler.function(getMatchSummaryInsights)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
