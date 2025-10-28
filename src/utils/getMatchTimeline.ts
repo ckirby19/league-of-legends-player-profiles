@@ -1,9 +1,33 @@
-import { TimelineData } from "./types";
+import { ParticipantFrame, TimelineData } from "./types";
 import { downloadData, uploadData } from "@aws-amplify/storage";
 import { generateClient } from "aws-amplify/api";
 import { Schema } from "amplify/data/resource";
 
 const client = generateClient<Schema>({ authMode: "apiKey" });
+
+function normalizeParticipantFrames(
+  raw: Record<string, ParticipantFrame>
+): Record<string, ParticipantFrame> {
+  return Object.fromEntries(
+    Object.entries(raw).map(([id, pf]) => [
+      id,
+      {
+        participantId: pf.participantId,
+        position: pf.position,
+        minionsKilled: pf.minionsKilled,
+        totalGold: pf.totalGold,
+        xp: pf.xp,
+      },
+    ])
+  );
+}
+
+function stripNulls<T extends object>(obj: T): T {
+  const cleaned = Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== null && v !== undefined)
+  );
+  return cleaned as T;
+}
 
 async function fetchMatchTimelineFromApi(
     matchId: string,
@@ -23,7 +47,23 @@ async function fetchMatchTimelineFromApi(
             throw new Error("Match timeline not found.");
         }
         // Cache the fetched data in S3 for future requests
-        const matchTimeline = data.timeline as TimelineData;
+        const extractedTimeline = data.timeline as TimelineData;
+
+        const matchTimeline: TimelineData = {
+          ...extractedTimeline,
+          frames: extractedTimeline.frames.map(frame => {
+            const pf = typeof frame.participantFrames === "string"
+                ? JSON.parse(frame.participantFrames)
+                : frame.participantFrames;
+
+            return {
+              timestamp: frame.timestamp,
+              events: frame.events.map(stripNulls),
+              participantFrames: normalizeParticipantFrames(pf),
+            };
+}),
+        };
+      
         saveMatchTimelineToS3(summonerName, region, matchId, matchTimeline);
 
         return matchTimeline;
@@ -33,15 +73,14 @@ async function fetchMatchTimelineFromApi(
 }
 
 async function saveMatchTimelineToS3(summonerName: string, region: string, matchId: string, matchTimeline: TimelineData): Promise<void> {
-    // Implement S3 fetch logic here
-    await uploadData({
-        path: `player-match-data/${region}/${summonerName}/${matchId}/timeline.json`,
-        data: JSON.stringify(matchTimeline),
-        options: {
-            contentType: "application/json",
-            bucket: "playerDashboardStorage"
-        }
-    }).result;    
+  await uploadData({
+    path: `player-match-data/${region}/${summonerName}/${matchId}/timeline.json`,
+    data: JSON.stringify(matchTimeline),
+    options: {
+        contentType: "application/json",
+        bucket: "playerDashboardStorage"
+    }
+  }).result;    
 }
 
 async function fetchMatchTimelineFromS3(summonerName: string, region: string, matchId: string): Promise<TimelineData | null> {

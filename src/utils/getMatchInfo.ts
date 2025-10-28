@@ -32,15 +32,14 @@ async function fetchMatchInfoFromApi(matchId: string, summonerName: string, regi
 }
 
 async function saveMatchInfoToS3(summonerName: string, region: string, matchId: string, matchInfo: MatchInfo): Promise<void> {
-    // Implement S3 fetch logic here
-    await uploadData({
-        path: `player-match-data/${region}/${summonerName}/${matchId}/match_info.json`,
-        data: JSON.stringify(matchInfo),
-        options: {
-            contentType: "application/json",
-            bucket: "playerDashboardStorage"
-        }
-    }).result;    
+  await uploadData({
+    path: `player-match-data/${region}/${summonerName}/${matchId}/match_info.json`,
+    data: JSON.stringify(matchInfo),
+    options: {
+        contentType: "application/json",
+        bucket: "playerDashboardStorage"
+    }
+  }).result;    
 }
 
 async function fetchMatchInfoFromS3(summonerName: string, region: string, matchId: string): Promise<MatchInfo | null> {
