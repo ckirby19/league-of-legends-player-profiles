@@ -103,12 +103,12 @@ export const MultiMatchHistoryMapVisualizer = ({ mapSrc, multiMatchPlayerEvents 
         </div>
 
         <div style={{ display: "flex" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
             <input
               type="checkbox"
               checked={showHeatmap}
               onChange={(e) => setShowHeatmap(e.target.checked)}
-              style={{ width: "20px", height: "20px" }} // makes checkbox bigger
+              style={{ width: "20px", height: "20px", cursor: "pointer" }}
             />
             <span>Show Player Events Heatmap</span>
           </label>
