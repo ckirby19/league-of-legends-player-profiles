@@ -100,9 +100,7 @@ export function SingleMatchDashboard({ matches, matchInfo, summonerName, region,
           );
 
           return { summary, timeline } as MatchHistory
-        }
-
-        )
+        })
       );
 
       const allMatchHistories: MatchHistory[] = [];
@@ -123,7 +121,11 @@ export function SingleMatchDashboard({ matches, matchInfo, summonerName, region,
       setMultiMatchHistory(matchHistory);
     }
 
-    generateMatchHistoryInsights();
+    const timeout = setTimeout(() => {
+      generateMatchHistoryInsights();
+    }, 0);
+
+    return () => clearTimeout(timeout);
 }, [matches, region, summonerName, setMultiMatchHistory]);
 
   useEffect(() => {
