@@ -17,7 +17,7 @@ Responsible for generating natural language coaching insights from compacted mat
 
 Data flow and how AI is applied
 
-Ingest: Lambda (Amplify) fetches match IDs and raw match objects from Riot if data not already cahced. Raw JSON saved to S3.
+Ingest: Lambda (Amplify) fetches match IDs and raw match objects from Riot if data not already cached. Raw JSON saved to S3.
 
 Compact: A compactor Lambda consumes raw timeline and match summary data and produces a compact minute‑level JSON which is stored in S3 for reuse.
 
