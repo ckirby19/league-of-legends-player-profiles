@@ -1,44 +1,54 @@
-High‑level approach
+High-Level Approach
 
-The coaching agent translates raw match timelines into actionable, human‑readable coaching suggestions by combining per‑minute probabilistic modelling with spatial analysis and event attribution. The pipeline is:
+Our coaching agent transforms raw League of Legends match timelines into concise, human-readable insights by combining per-minute probabilistic modeling, spatial analysis, and event attribution. The end goal is to translate numerical signals into meaningful coaching feedback.
 
-1. Ingest match summary and timeline from the Riot API, cache this in S3.
+The overall pipeline is:
 
-2. Compact and extract relevant minute‑level features (team gold, XP, Creep Score; event aggregates; player positions).
+- Data Ingestion: Retrieve match summaries and timelines from the Riot API through AWS Lambda, and cache them in S3 for reusability.
 
-3. Compute a per‑minute win expectancy curve from resource totals using a version of Pythagorean expectation adapted for LoL data.
+- Feature Extraction: Compact and extract key minute-level features such as team gold, experience, creep score, aggregated event counts, and player positions.
 
-4. Derive minute‑level momentum as discrete deltas of expectancy and attribute each delta to the most relevant events in that minute.
+- Win Expectancy Modeling: Compute a per-minute win probability curve using a variant of the Pythagorean Expectation adapted for LoL’s gold and XP data.
 
-5. Rank events by absolute impact (|ΔP|), surface the key player events as input to agent, and provide contextual explanations (what happened, where on the map, who was involved).
+- Momentum Attribution: Derive minute-to-minute momentum as discrete deltas in win probability (ΔPₜ = Pₜ − Pₜ₋₁) and attribute these changes to the most relevant in-game events.
 
-6. Call an LLM with the compacted minute summaries and key events to convert the raw signals into short, natural language coaching insights. LLM responses for a particular match are also cached in S3 to avoid recalling AWS Bedrock for the same game.
+- Impact Ranking: Rank events by absolute impact (|ΔP|) and surface the most decisive plays with full context — what happened, who was involved, and where it occurred on the map.
 
-This data is then all combined into a dashboard with:
-(a) charts showing how the player teams XP and Gold advantage and win probability evolved over time
-(b) a momentum chart highlighting decisive minutes
-(c) a spatial layer (KDE heatmap + event points) showing where important actions occurred
-(d) concise coaching recommendations derived from the above agent input
+- Coaching Insight Generation: Provide the compacted summaries and impactful event list to an LLM, which translates them into short, actionable coaching suggestions. LLM responses are cached in S3 to avoid repeated Bedrock calls for the same match.
 
-A second dashboard is used to show insights across the whole history of matches.
-To create this, the summaries across the most recent games are further summarised, extracting the K/D/A rate across games and Gold and XP per game to display, and as a prompt to an LLM to provide insights over the user performance across the recent games
+All of this data feeds into the Match Momentum Dashboard, which combines:
+
+- A Win Probability Chart showing how advantage evolved over time
+
+- A Momentum Impact View highlighting the most decisive minutes
+
+- A Map Visualizer (KDE heatmap + event markers) revealing spatial tendencies
+
+- A Coaching Panel that presents concise LLM-generated recommendations
+
+A secondary multi-match dashboard aggregates recent games, summarizing average K/D/A, gold, and XP metrics, and uses these as input for higher-level LLM insights that evaluate overall player trends.
 
 Core calculations and logic
 
-In competitive games like League of Legends, momentum describes how control and advantage shift between teams over time. It’s a reflection of who is dictating the tempo, securing objectives and putting sustained pressure on the opposition.
-To quantify this, we adapted the Pythagorean Expectation, a concept from baseball analytics developed by Bill James. Originally, it estimated a team’s win percentage from runs scored versus runs allowed, but in our case we replace runs with in-game resources: gold and experience.
-We can take these probabilities and see the ebbs and flows throughout a game. This is what we define as Momentum Impact, which looks at the delta of current win probability in a given minute and the previous minute.
-Where things happen can be just as insightful as what has happened. That’s why we have included a heatmap that allows our user to do spatial analysis of each of their games. To achieve this we have used a Kernel Density Estimation (KDE) to visualise player movement and positioning across the map.
-We do this by transforming discrete player locations into a continuous probability surface. The resulting heatmap highlights ‘hot’ zones, where players have spent the most time or had the highest activity density. Red regions represent strong presence, whereas blue areas represent less activity. The goal is to identify tendencies such as: lane focus, roaming patterns or control zone within one visual.
+In competitive games like League of Legends, momentum describes how control shifts between teams over time — a reflection of which side dictates tempo, secures objectives, and sustains pressure.
+To quantify this, we adapted the Pythagorean Expectation a concept from baseball analytics developed by Bill James, replacing runs with in-game resources such as gold and experience.
+
+Applying this frame-by-frame yields an evolving win probability curve. The discrete differences between minutes form our Momentum Impact, which captures the magnitude of each swing in control.
+
+Where things happen can be just as insightful as what has happened. So to complement this temporal analysis, we incorporated a Kernel Density Estimation (KDE) layer to visualise player movement and positioning across the map.
+We do this by transforming discrete player locations into a continuous probability surface. The resulting heatmap highlights ‘hot’ zones, where players have spent the most time or had the highest activity density.
+Red regions represent strong presence, whereas blue areas represent less activity. The goal is to identify tendencies such as: lane focus, roaming patterns or control zone within one visual.
 
 Data sources and augmentation
 
-Primary: Riot match V5 timeline and match summary endpoints (per‑frame participant stats and event logs).
-Derived features: minute‑level aggregates (team totals), event counts and types, KDE hotspots, and compacted JSON used for caching and LLM inputs.
-No external game data is required; all insights compute from these timeline + summary sources. Optionally, aggregated historical data (player’s last N matches) is used to contextualize recurring patterns across games.
+- Primary: Riot match V5 API timeline and match summary endpoints (per‑frame participant stats and event logs).
+- Derived features: minute‑level aggregates (team totals), event counts and types, KDE density maps, and compacted JSON used for caching and LLM inputs.
+- Historical Context: Aggregation over a player’s recent matches to identify recurring patterns in performance
+
+All insights are derived from these official sources — no external datasets are required.
 
 What we discovered and learned
 
-LLMs help convert signals to coaching language but require tight prompts limited to the top X impactful minutes and succinct event lists to avoid hallucinations and keep responses actionable. The data flow to the LLMs could be further improved by reduce the token count of the multi game summaries
-The S3 caching greatly improved the user experience by minimising wait times when clicking on a new match
-The KDE plot not only adds a new visual appeal to the map visualizer, but provides unique insights into the distribution of key events related to the players performance  
+- LLM Prompt Design: To keep coaching outputs focused and avoid hallucinations, prompts must be tightly scoped to the top few impactful minutes and summarized event lists. Reducing token count across multi-match summaries remains an area for improvement.
+- Caching and Performance: S3 caching dramatically reduced load times and API costs, improving user experience when switching between matches.
+- Spatial Insight Value: The KDE visualizer not only enhances the dashboard’s appeal but also provides novel insights into player movement, control zones, and engagement density — effectively bridging raw analytics with intuitive spatial storytelling.

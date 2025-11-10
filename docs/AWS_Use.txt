@@ -1,28 +1,40 @@
-AWS Amplify
+AWS Services Overview
 
+AWS Amplify
 Orchestration layer for frontend/backend integration, user authentication and deployment convenience. Provides the developer workflow for hosting the dashboard and wiring serverless functions.
 
 AWS Lambda (via Amplify)
-
-Serverless functions for ingesting Riot API data, running the compactor, orchestrating cache checks, and calling downstream services (Bedrock proxy or other AI endpoints). Lambdas are short‑lived, stateless workers that process per‑match tasks.
+Implements the project’s serverless backend. Each Lambda acts as a lightweight, stateless worker responsible for fetching match data from the Riot API, compacting it into a reduced format, managing cache lookups in S3, and invoking downstream AI services such as Amazon Bedrock. This design ensures scalability and cost-efficiency by processing matches on demand.
 
 Amazon S3
+Used as durable storage for raw and processed data. S3 buckets are used to store:
+- Raw Riot match timelines and summaries
+- Compacted JSON artifacts (minute-level summaries and momentum data)
+- Cached LLM outputs to avoid redundant Bedrock calls
 
-Durable storage for raw match summaries, timelines, and compacted JSON artifacts.
+Amazon Bedrock (LLM Inference)
+The AI backbone of the project. Bedrock receives structured prompts derived from compacted match data—typically the top N impactful key events and overall team and player data.
+It returns concise, natural-language coaching insights that explain what happened, why it mattered, and how the player could improve.
 
-Amazon Bedrock (LLM inference)
+Data Flow and AI Application
 
-Responsible for generating natural language coaching insights from compacted match data. Lambdas prepare a constrained prompt (top N minutes by |ΔP|, short event lists, KDE hotspots) and call Bedrock; responses are parsed into short coaching snippets shown in the dashboard.
+1. Ingest: An AWS Lambda (triggered via Amplify) fetches match IDs and raw timeline objects from the Riot API if they are not already cached. The raw JSON is stored in S3.
 
+2. Compact: A “compactor” Lambda processes each match, calculating team gold/XP, per-minute win probability, and momentum deltas. It outputs a compact JSON summary for reuse, stored in S3.
 
-Data flow and how AI is applied
+3. LLM Prompt Preparation: Two structured datasets are built for Bedrock:
+- Single-match input: compacted data for the current game (minute-level deltas, key events, KDE summaries).
+- Multi-match input: aggregated summaries across recent games to provide historical context and trend analysis.
 
-Ingest: Lambda (Amplify) fetches match IDs and raw match objects from Riot if data not already cached. Raw JSON saved to S3.
+4. LLM Inference (Amazon Bedrock): Lambda invokes Bedrock with these inputs. The model generates short coaching narratives — highlighting decisive moments, map tendencies, and performance trends.
 
-Compact: A compactor Lambda consumes raw timeline and match summary data and produces a compact minute‑level JSON which is stored in S3 for reuse.
+5. Serve: The frontend retrieves the compacted data and Bedrock’s response (either from cache or a new call) and visualizes them through interactive charts, heatmaps, and AI-generated recommendations.
 
-LLM prompt prep: For a given match (or player's recent history), Lambda composes a short prompt containing top K minutes by |ΔP| (timestamp, ΔP value, short event list), KDE hotspot labels, and aggregated patterns from recent matches.
+Summary
 
-LLM inference: Lambda calls Amazon Bedrock with the prompt and receives a short coaching report. Post‑processing extracts structured highlights (minute, cause, recommended action).
+By combining AWS Amplify, Lambda, S3, and Amazon Bedrock, the system forms an end-to-end, fully serverless AI pipeline:
 
-Serve: The frontend fetches the compacted JSON and the LLM summary from S3 or a cache API and renders timeline, momentum, map overlays and textual coaching cards.
+- Amplify orchestrates and deploys
+- Lambdas process data on demand
+- S3 provides reliable storage and caching
+- Bedrock delivers the AI-driven coaching intelligence that powers the Match Momentum Dashboard
