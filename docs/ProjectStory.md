@@ -48,3 +48,25 @@ We do this by transforming discrete player locations into a continuous probabili
 - Player positions and event points are transformed to be displayed as an overlap on top of the Lol map. Event rendering supports per‑category toggles so users can show/hide Champion Kills, Assists, Objectives, etc.
 
 - A KDE heatmap layer converts discrete positions into a continuous density surface and is composited over the map with adjustable smoothing and opacity to reveal lane focus, roaming corridors and objective control zones.
+
+## Accomplishments that we're proud of
+- Creating a visually appealing view of LoL match timeline data which gives users unique insights into their performance within a game and across multiple games
+- Creating a simple and scalable process for extracting and summarising data to minimise the token count of a prompt fed to LLMs
+- Making intelligent use of S3 buckets to cache expensive data extraction and summarisation steps to improve the user experience by reducing wait time
+
+## Challenges and What we learned
+
+- How to apply data summarisation and analysis techniques to LoL match timeline data
+
+- How to summarise data effectively to minimise the token count for prompts
+
+- Extracting and summarising data from multiple match timelines took time, and so we processed multiple games in the background and used S3 buckets to cache summarised data 
+
+## What's next for Match Momentum Dashboard
+- Add automatic minute ranking: present the top 3 “most impactful minutes” per match as coaching highlights with the recommended tactical focus.
+
+- Enhanced LLM Insights: Create insights on a play-by-play basis so a user can get more specific feedback on better options when in a particular part of the map at a certain time 
+
+- Team-level and role-level breakdowns so coaches can see whether certain lanes or champion types are driving momentum.
+
+- Aggregate over many matches to expose player tendencies (e.g., “this player tends to lose control around minute 12 due to objective timing”).

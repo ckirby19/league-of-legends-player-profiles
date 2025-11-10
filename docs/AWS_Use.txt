@@ -1,0 +1,28 @@
+AWS Amplify
+
+Orchestration layer for frontend/backend integration, user authentication and deployment convenience. Provides the developer workflow for hosting the dashboard and wiring serverless functions.
+
+AWS Lambda (via Amplify)
+
+Serverless functions for ingesting Riot API data, running the compactor, orchestrating cache checks, and calling downstream services (Bedrock proxy or other AI endpoints). Lambdas are short‑lived, stateless workers that process per‑match tasks.
+
+Amazon S3
+
+Durable storage for raw match summaries, timelines, and compacted JSON artifacts.
+
+Amazon Bedrock (LLM inference)
+
+Responsible for generating natural language coaching insights from compacted match data. Lambdas prepare a constrained prompt (top N minutes by |ΔP|, short event lists, KDE hotspots) and call Bedrock; responses are parsed into short coaching snippets shown in the dashboard.
+
+
+Data flow and how AI is applied
+
+Ingest: Lambda (Amplify) fetches match IDs and raw match objects from Riot if data not already cahced. Raw JSON saved to S3.
+
+Compact: A compactor Lambda consumes raw timeline and match summary data and produces a compact minute‑level JSON which is stored in S3 for reuse.
+
+LLM prompt prep: For a given match (or player's recent history), Lambda composes a short prompt containing top K minutes by |ΔP| (timestamp, ΔP value, short event list), KDE hotspot labels, and aggregated patterns from recent matches.
+
+LLM inference: Lambda calls Amazon Bedrock with the prompt and receives a short coaching report. Post‑processing extracts structured highlights (minute, cause, recommended action).
+
+Serve: The frontend fetches the compacted JSON and the LLM summary from S3 or a cache API and renders timeline, momentum, map overlays and textual coaching cards.
