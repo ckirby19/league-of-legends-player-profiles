@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import type { MatchSummary } from "../utils/types";
-import { generateClient } from "aws-amplify/data";
-import { Schema } from "amplify/data/resource";
+import { getMatchSummaryInsights } from "@/utils/getMatchSummaryInsights";
 
-const client = generateClient<Schema>({ authMode: "apiKey" });
-    
 interface InsightsPanelProps {
   matchSummary: MatchSummary;
+  summonerName: string;
+  region: string;
 }
 
-export const InsightsPanel = ({ matchSummary }: InsightsPanelProps) => {
+export const InsightsPanel = ({ matchSummary, summonerName, region }: InsightsPanelProps) => {
   const [insights, setInsights] = useState<string>();
   const [loading, setLoading] = useState(false);
 
@@ -18,21 +17,16 @@ export const InsightsPanel = ({ matchSummary }: InsightsPanelProps) => {
       try {
         setLoading(true);
 
-        const { data, errors } = await client.queries.generateMatchSummaryInsights({
-          prompt: JSON.stringify(matchSummary),
-        });
+        const fetchedInsights = await getMatchSummaryInsights(summonerName, region, matchSummary);
 
-        if (errors){
-          console.log(`Errors generating insights: ${errors.map(e => e.message).join(", ")}`);
+        if (fetchedInsights instanceof Error){
+          console.log("Errors generating insights", fetchedInsights.message);
           return;
         }
-
-        if (!data) {
-            console.log("Errors generating insights.");
-            return;
+        else{
+          setInsights(fetchedInsights);
         }
 
-        setInsights(data);
       } catch (err) {
         console.log(`Error generating insights: ${(err as Error).message}`);
       } finally {
@@ -43,7 +37,7 @@ export const InsightsPanel = ({ matchSummary }: InsightsPanelProps) => {
     if (matchSummary) {
       fetchInsights();
     }
-  }, [matchSummary]);
+  }, [matchSummary, region, summonerName]);
 
   return (
     <div className="mt-4 p-4 rounded-lg bg-neutral-900 text-white shadow">

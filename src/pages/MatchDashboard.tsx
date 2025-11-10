@@ -1,33 +1,37 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { WinProbChart } from "./lineGraphs/WinProbability";
-import { MomentumImpactChart } from "./lineGraphs/MomentumImpact";
-import { AdvantageChart } from "./lineGraphs/Advantage";
+import { WinProbChart } from "./singleMatchGraphs/WinProbability";
+import { MomentumImpactChart } from "./singleMatchGraphs/MomentumImpact";
+import { AdvantageChart } from "./singleMatchGraphs/Advantage";
 import { MapVisualizer } from "./MapVisualizer";
 import { TimelineControls } from "./TimelineControls";
-import { MatchInfo, MatchSummary, MinuteSummary, TimelineData } from "../utils/types";
+import { MatchHistory, MatchInfo, MatchSummary, MinuteSummary, MultiMatchHistory, MultiMatchHistoryInputData, TimelineData } from "../utils/types";
 import { getMatchTimelineForSummonerMatch } from "@/utils/getMatchTimeline";
 import { getMatchTimelineSummaryForSummonerMatch } from "@/utils/getMatchTimelineSummary";
 import { InsightsPanel } from "./InsightsPanel";
+import { computeMultiMatchHistory } from "@/utils/computeMultiMatchHistory";
 
 interface DashboardProps {
+  matches: MatchInfo[];
   matchInfo: MatchInfo;
   summonerName: string;
   region: string;
   mapSrc: string;
+  setMultiMatchHistory: React.Dispatch<React.SetStateAction<MultiMatchHistory | undefined>>;
 }
 
-export function Dashboard({ matchInfo, summonerName, region, mapSrc }: DashboardProps) {
+export function SingleMatchDashboard({ matches, matchInfo, summonerName, region, mapSrc, setMultiMatchHistory }: DashboardProps) {
   const [currentMinute, setCurrentMinute] = useState(0);
   const [minuteSummaries, setMinuteSummaries] = useState<MinuteSummary[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [summary, setSummary] = useState<MatchSummary | null>(null);
   const [loading, setLoading] = useState(false);
   
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    async function loadTimeline() {
+    async function loadSelectedTimeline() {
       let timeline: TimelineData;
       let matchSummary: MatchSummary;
       setLoading(true);
@@ -55,6 +59,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
           else{
             matchSummary = summary;
             setSummary(matchSummary);
+            setTimelineData(timeline);
             setMinuteSummaries(matchSummary.matchTimelineSummary.playerTeamTimeline);
           }
         }
@@ -69,8 +74,57 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
 
     }
 
-    loadTimeline();
+    loadSelectedTimeline();
   }, [matchInfo, region, summonerName]);
+
+  useEffect(() => {
+    async function generateMatchHistoryInsights() {
+      const matchHistoryRequest = await Promise.allSettled(
+        matches.map(async (m) => {
+          const timeline = await getMatchTimelineForSummonerMatch(
+            summonerName,
+            region,
+            m.matchOverview.matchId
+          );
+
+          if (timeline instanceof Error) {
+            return null;
+          }
+
+          const summary = await getMatchTimelineSummaryForSummonerMatch(
+            timeline,
+            m,
+            summonerName,
+            region,
+            m.matchOverview.matchId
+          );
+
+          return { summary, timeline } as MatchHistory
+        }
+
+        )
+      );
+
+      const allMatchHistories: MatchHistory[] = [];
+
+      matchHistoryRequest.forEach((result) => {
+        if (result.status === "fulfilled" &&
+          !(result.value instanceof Error) &&
+          !(result.value === null)) {
+          allMatchHistories.push(result.value);
+        }
+      });
+
+      const inputData: MultiMatchHistoryInputData = {
+        matchHistories: allMatchHistories
+      };
+
+      const matchHistory = await computeMultiMatchHistory(inputData);
+      setMultiMatchHistory(matchHistory);
+    }
+
+    generateMatchHistoryInsights();
+}, [matches, region, summonerName, setMultiMatchHistory]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -91,7 +145,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-4">
       <div className="flex flex-row gap-4 w-full">
-        {/* Left column: data */}
+        {/* Left column: Data Visualization */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -116,7 +170,7 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
           </Card>
         </motion.div>
 
-        {/* Right column: map */}
+        {/* Right column: Map & Timeline Controls */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -126,12 +180,14 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
           <Card className="bg-neutral-900 text-white w-full h-full">
             <CardContent className="pt-4">
               <h3 className="text-lg font-semibold mb-2">Map Visualizer - Player Position</h3>
-              <div className="w-full aspect-square">
-                <MapVisualizer
+              <div className="w-full pb-10">
+                {timelineData && <MapVisualizer
+                  playerPuuid={matchInfo.playerPuuid}
                   mapSrc={mapSrc}
+                  timeline={timelineData!}
                   summaries={minuteSummaries}
                   currentMinute={currentMinute}
-                />
+                />}
               </div>
               <TimelineControls
                 currentMinute={currentMinute}
@@ -140,7 +196,26 @@ export function Dashboard({ matchInfo, summonerName, region, mapSrc }: Dashboard
                 onPlayToggle={() => setIsPlaying((p) => !p)}
                 onSeek={setCurrentMinute}
               />
-              {summary && <InsightsPanel matchSummary={summary} />}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      <div className="flex flex-row mt-4 w-full">
+        {/* Bottom: AI Insights Panel */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex-1"
+        >
+          <Card className="bg-neutral-900 text-white w-full h-full">
+            <CardContent className="pt-4">
+              {summary && <InsightsPanel
+                matchSummary={summary}
+                summonerName={summonerName}
+                region={region}
+              />}
             </CardContent>
           </Card>
         </motion.div>

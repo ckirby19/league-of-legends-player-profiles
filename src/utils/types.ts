@@ -52,45 +52,46 @@ export interface BaseEvent {
   type: string;
 }
 
-export interface ChampionKillEvent extends BaseEvent {
+export interface EventWithPosition {
+  position: { x: number; y: number };
+}
+
+export interface SpatialTemporalEvent extends BaseEvent, EventWithPosition {}
+
+export interface ChampionKillEvent extends SpatialTemporalEvent {
   type: "CHAMPION_KILL";
   killerId: number;
   victimId: number;
   assistingParticipantIds?: number[];
-  position: { x: number; y: number };
 }
 
-export interface WardPlacedEvent extends BaseEvent {
+export interface WardPlacedEvent extends SpatialTemporalEvent {
   type: "WARD_PLACED";
   creatorId: number;
   wardType: string;
-  position: { x: number; y: number };
 }
 
-export interface WardKillEvent extends BaseEvent {
+export interface WardKillEvent extends SpatialTemporalEvent {
   type: "WARD_KILL";
   killerId: number;
   wardType: string;
-  position: { x: number; y: number };
 }
 
-export interface BuildingKillEvent extends BaseEvent {
+export interface BuildingKillEvent extends SpatialTemporalEvent {
   type: "BUILDING_KILL";
   killerId: number;
   assistingParticipantIds?: number[];
   buildingType: string; // e.g. "TOWER_BUILDING", "INHIBITOR_BUILDING"
   laneType: string;
-  position: { x: number; y: number };
   teamId: number;
 }
 
-export interface EliteMonsterKillEvent extends BaseEvent {
+export interface EliteMonsterKillEvent extends SpatialTemporalEvent {
   type: "ELITE_MONSTER_KILL";
   killerId: number;
   assistingParticipantIds?: number[];
   monsterType: string; // e.g. "DRAGON", "BARON_NASHOR", "RIFTHERALD"
   monsterSubType?: string; // e.g. "AIR_DRAGON", "FIRE_DRAGON"
-  position: { x: number; y: number };
   teamId?: number;
 }
 
@@ -127,6 +128,62 @@ export interface PlayerEvent {
   description?: string; // e.g. "Killed Ahri", "Took Dragon"
 }
 
+export function hasPosition(
+  e: TimelineEvent
+): e is ChampionKillEvent | WardPlacedEvent | WardKillEvent | BuildingKillEvent | EliteMonsterKillEvent {
+  return (
+    "position" in e &&
+    e.position !== undefined &&
+    e.position !== null
+  );
+}
+
+export function getSpatialTemporalEvents(
+  events: TimelineEvent[]
+): SpatialTemporalEvent[] {
+  return events.filter(hasPosition);
+}
+
+export function getPlayerKDAEvents(
+  events: TimelineEvent[],
+  playerId: number
+): SpatialTemporalEvent[] {
+  return events.filter((e) => hasPosition(e) && isPlayerKDAEvent(e, playerId));
+}
+
+export function isPlayerKDAEvent(
+  e: SpatialTemporalEvent,
+  playerId: number
+): e is ChampionKillEvent | BuildingKillEvent | EliteMonsterKillEvent {
+  switch (e.type) {
+    case "ELITE_MONSTER_KILL": {
+      const ev = e as EliteMonsterKillEvent;
+      return (
+        ev.killerId === playerId ||
+        (ev.assistingParticipantIds?.includes(playerId) ?? false)
+      );
+    }
+
+    case "BUILDING_KILL": {
+      const ev = e as BuildingKillEvent;
+      return (
+        ev.killerId === playerId ||
+        (ev.assistingParticipantIds?.includes(playerId) ?? false)
+      );
+    }
+    case "CHAMPION_KILL": {
+      const ev = e as ChampionKillEvent;
+      return (
+        ev.killerId === playerId ||
+        ev.victimId === playerId ||
+        (ev.assistingParticipantIds?.includes(playerId) ?? false)
+      );
+    }
+    default:
+      return false;
+  }
+}
+
 export interface MatchIdsResponse {
   puuid: string;
   matchIds: string[];
@@ -141,8 +198,6 @@ export interface MatchSummary {
   matchInfo: MatchInfo;
   matchTimelineSummary: MatchTimelineSummary;
 }
-
-// MatchInfo
 
 export interface MatchInfo {
   playerPuuid: string;
@@ -220,4 +275,34 @@ export interface ProbabilityChange {
   before: number;
   after: number;
   delta: number;
+}
+
+// Match History
+export interface MultiMatchHistory {
+  winRate: number;
+  statsPerMatch: MatchHistoryStats[];
+  playerEventsAcrossMatches: Record<number, MatchEventsForPlayer>; // keyed by timeline matchId
+  historyInsights: string;
+}
+
+export interface MatchEventsForPlayer {
+  playerParticipantId: number;
+  events: SpatialTemporalEvent[];
+}
+
+export interface MatchHistoryStats {
+  kills: number;
+  deaths: number;
+  assists: number;
+  goldEarned: number;
+  xpEarned: number;
+}
+
+export interface MultiMatchHistoryInputData {
+  matchHistories: MatchHistory[];
+}
+
+export interface MatchHistory {
+  summary: MatchSummary;
+  timeline: TimelineData;
 }

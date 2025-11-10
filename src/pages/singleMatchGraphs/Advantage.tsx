@@ -5,7 +5,7 @@ import { MinuteSummary } from "../../utils/types";
 
 interface AdvantageChartProps {
   data: MinuteSummary[];
-  currentMinute: number; // ms
+  currentMinute: number;
 }
 
 export const AdvantageChart = ({ data, currentMinute }: AdvantageChartProps) => (
@@ -13,7 +13,7 @@ export const AdvantageChart = ({ data, currentMinute }: AdvantageChartProps) => 
     <LineChart data={data}>
         <XAxis
           dataKey="minute"
-          ticks={data.map(d => d.minute).filter(m => m % 2 === 0)} // only even minutes
+          ticks={data.map(d => d.minute).filter(m => m % 2 === 0)}
           label={{ value: "Time (mins)", position: "insideBottom", offset: -5 }}
         />
         <YAxis

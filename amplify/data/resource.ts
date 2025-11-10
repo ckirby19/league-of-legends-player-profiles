@@ -3,6 +3,7 @@ import { getMatchIds as getMatchIdsFn } from "../functions/get-match-ids/resourc
 import { getMatchInfo as getMatchInfoFn } from "../functions/get-match-info/resource";
 import { getMatchTimeline as getMatchTimelineFn } from "../functions/get-match-timeline/resource";
 import { getMatchSummaryInsights } from "../functions/get-match-summary-insight/resource";
+import { getSummonerMultiMatchInsights } from "../functions/get-summoner-multi-match-insights/resource";
 
 const schema = a.schema({
   MatchIdsResult: a.customType({
@@ -11,6 +12,7 @@ const schema = a.schema({
   }),
   MatchInfoResult: a.customType({
     playerPuuid: a.string(),
+    playerParticipantId: a.integer(),
     matchOverview: a.ref("MatchOverview"),
     teamStats: a.ref("Teams"),
     playerTeamId: a.string(),
@@ -169,6 +171,14 @@ const schema = a.schema({
     .returns(a.string())
     .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
     .handler(a.handler.function(getMatchSummaryInsights)),
+  generateSummonerMultiMatchInsights: a
+    .query()
+    .arguments({
+      prompt: a.string().required(),
+    })
+    .returns(a.string())
+    .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
+    .handler(a.handler.function(getSummonerMultiMatchInsights)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
