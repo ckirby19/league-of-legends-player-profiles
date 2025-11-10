@@ -5,8 +5,6 @@ import {
   ChampionKillEvent,
   BuildingKillEvent,
   EliteMonsterKillEvent,
-  OriginalMapDimension,
-  DisplayMapDimension,
   ParticipantFrame,
   MatchTimelineSummary,
   KeyEvent,
@@ -14,6 +12,7 @@ import {
   MatchInfo,
   MatchSummary
 } from "./types";
+import { scalePositionToMapDisplay } from "./helpers";
 
 function computeAdvantage(team1: number, team2: number): number {
   if (team1 + team2 === 0) return 0;
@@ -21,21 +20,17 @@ function computeAdvantage(team1: number, team2: number): number {
 }
 
 function pythagoreanExpectation(team1: number, team2: number, x: number): number {
-  return Math.pow(team1, x) / (Math.pow(team1, x) + Math.pow(team2, x));
+  const denom = Math.pow(team1, x) + Math.pow(team2, x);
+  if (denom === 0) {
+    return 0.5;
+  }
+  return Math.pow(team1, x) / denom;
 }
 
 function ensureParticipantFrames(
   pf: Record<string, ParticipantFrame> | string
 ): Record<string, ParticipantFrame> {
   return typeof pf === "string" ? JSON.parse(pf) : pf;
-}
-
-function scalePosition(pos: { x: number; y: number } | undefined) {
-  if (!pos) return undefined;
-  return {
-    x: (pos.x / OriginalMapDimension) * DisplayMapDimension,
-    y: DisplayMapDimension - (pos.y / OriginalMapDimension) * DisplayMapDimension,
-  };
 }
 
 export function computeMatchSummary(
@@ -87,16 +82,18 @@ export function computeMatchSummary(
     const normalizedAdvCreepScore = computeAdvantage(playerTeamCreepScore, enemyTeamCreepScore);
 
     // Winning probability per metric
-    const pGold = pythagoreanExpectation(playerTeamGold, enemyTeamGold, x);
-    const pXP = pythagoreanExpectation(playerTeamXP, enemyTeamXP, x);
-    const pCreepScore = pythagoreanExpectation(playerTeamCreepScore, enemyTeamCreepScore, x);
+    const pGold = pythagoreanExpectation(playerTeamGold, enemyTeamGold, x) ?? 0;
+    const pXP = pythagoreanExpectation(playerTeamXP, enemyTeamXP, x) ?? 0;
+    const pCreepScore = pythagoreanExpectation(playerTeamCreepScore, enemyTeamCreepScore, x) ?? 0;
 
-    // Final probability = average
-    const pFinal = (pGold + pXP + pCreepScore) / 3;
+    let pFinal = (pGold + pXP + pCreepScore) / 3;
+    if (minute === 0) {
+      pFinal = 0.5;
+    }
 
     // Player position
     const playerFrame = frame.participantFrames[playerId.toString()];
-    const playerPosition = playerFrame?.position ? scalePosition(playerFrame.position) : undefined;
+    const playerPosition = playerFrame?.position ? scalePositionToMapDisplay(playerFrame.position) : undefined;
 
     summaries.push({
       minute,
@@ -112,6 +109,18 @@ export function computeMatchSummary(
   // Compute momentum impact and populate keyEvents per summary
   for (let i = 0; i < summaries.length - 1; i++) {
     summaries[i].momentumImpact = summaries[i + 1].winProb - summaries[i].winProb;
+  }
+
+  // After building summaries
+  for (let i = 0; i < summaries.length; i++) {
+    if (i === 0) {
+      // Force momentumImpact = 0 at time 0
+      summaries[i].momentumImpact = 0;
+    } else if (i < summaries.length - 1) {
+      summaries[i].momentumImpact = summaries[i + 1].winProb - summaries[i].winProb;
+    } else {
+      summaries[i].momentumImpact = 0; // last frame has no "next"
+    }
   }
 
   const winningProbByMinute = new Map<number, number>();
@@ -183,18 +192,29 @@ export function computeMatchSummary(
 
       if (!isKey) return;
 
-      // Compute probability change for the player's team: before = previous summary.winProb, after = current summary.winProb
-      const beforeProb = (i > 0 ? summaries[i - 1].winProb : current.winProb);
-      const afterProb = current.winProb;
-      const probChange: ProbabilityChange = { before: beforeProb, after: afterProb, delta: afterProb - beforeProb };
+      // Compute probability change for the player's team
+      let beforeProb: number;
+      let afterProb: number;
 
-      // Map event position to display coords
-      const displayPos = evPosition ? scalePosition(evPosition) as { x: number; y: number } : { x: 0, y: 0 };
+      if (i === 0) {
+        // At time 0, force neutral baseline
+        beforeProb = 0.5;
+        afterProb = 0.5;
+      } else {
+        beforeProb = summaries[i - 1].winProb;
+        afterProb = current.winProb;
+      }
+
+      const probChange: ProbabilityChange = {
+        before: beforeProb,
+        after: afterProb,
+        delta: afterProb - beforeProb,
+      };
 
       const keyEvent: KeyEvent = {
         matchClock: new Date(frame.timestamp).toISOString().slice(11, 19), // "HH:MM:SS" from timestamp
         type: typeLabel,
-        position: displayPos,
+        position: evPosition!,
         description: desc,
         playerTeamProbabilityChange: probChange,
       };

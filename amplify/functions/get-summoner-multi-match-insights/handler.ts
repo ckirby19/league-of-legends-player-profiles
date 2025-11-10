@@ -7,7 +7,7 @@ import {
   InvokeModelCommandInput,
 } from "@aws-sdk/client-bedrock-runtime";
 
-export const handler: Schema["generateMatchSummaryInsights"]["functionHandler"] = async (
+export const handler: Schema["generateSummonerMultiMatchInsights"]["functionHandler"] = async (
   event
 ) => {
     if (!event.arguments.prompt) {
@@ -38,9 +38,9 @@ async function extractResponseFromAnthropicModel(
         system:
            `
             You are an expert League of Legends analyst. 
-            You are given structured match timeline data in JSON format. 
+            You are given structured data summarising the performance of a summoner over the last 20 games in JSON format. 
             Your job is to generate concise, insightful commentary that can be displayed in a dashboard.
-            The insights should help a player understand key moments and performances in their match.
+            The insights should help a player understand their performacen across these 20 games and how they can improve.
             Focus only on the team data and player data relevant to the user with playerPuuid
             The JSON contains:
             - matchInfo (game mode, duration, etc.)
@@ -48,13 +48,6 @@ async function extractResponseFromAnthropicModel(
             - playerStats (per champion performance)
             - timeline (minute-by-minute win probability, gold/xp swings, momentum impact)
             - keyEvents (kills, objectives, towers, dragons, barons)
-
-            ### Instructions:
-            1. Identify turning points in the match (e.g., when win probability shifted significantly).
-            2. Highlight objective control (dragons, barons, towers) and their impact.
-            3. Call out where the player excelled (high KDA, big damage, clutch kills etc).
-            4. Keep insights short, bullet-point style (1-2 sentences each).
-            5. Avoid repeating raw numbers already shown in the graphs; instead, explain their meaning.
 
             Generate 2 to 3 insights. Separate each insight with a newline.
             `,
@@ -69,7 +62,7 @@ async function extractResponseFromAnthropicModel(
             ],
             },
         ],
-        max_tokens: 800,
+        max_tokens: 1200,
         temperature: 0.2,
         }),
     } as InvokeModelCommandInput;

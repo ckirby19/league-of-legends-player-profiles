@@ -3,6 +3,7 @@ import { MatchInfo } from "../utils/types";
 
 interface MatchSelectorProps {
   matches: MatchInfo[];
+  showMultiMatchHistory: boolean;
   selectedMatchId: string | null;
   onSelect: (id: string) => void;
 }
@@ -24,11 +25,11 @@ function timeSince(timestamp: number): string {
   }
 }
 
-export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelectorProps) {
+export function MatchSelector({ matches, showMultiMatchHistory, selectedMatchId, onSelect }: MatchSelectorProps) {
   return (
     <nav className="w-64 bg-neutral-900 text-white flex flex-col h-full"> 
       <div className="sticky top-0 z-10 bg-neutral-900 border-b border-gray-700">
-        <h3 className="px-4 py-2 font-semibold">20 Most Recent Games</h3>
+        <h3 className="px-4 py-2 font-semibold">Most Recent Games</h3>
       </div>
       <ul className="flex-1 overflow-y-auto overflow-y-scrollbar">
         {matches.map((m) => (
@@ -39,7 +40,7 @@ export function MatchSelector({ matches, selectedMatchId, onSelect }: MatchSelec
             transition={{ duration: 0.3 }}
             onClick={() => onSelect(m.matchOverview.matchId)}
             className={`px-4 py-3 cursor-pointer border-b border-gray-800 hover:bg-neutral-800
-              ${m.matchOverview.matchId === selectedMatchId ? "bg-neutral-700" : ""}
+              ${(!showMultiMatchHistory && m.matchOverview.matchId === selectedMatchId) ? "bg-neutral-700" : ""}
               ${m.playerStats.win ? "text-green-400" : "text-red-400"}`}
           >
             <div className="flex justify-between items-center">

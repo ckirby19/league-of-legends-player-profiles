@@ -13,12 +13,12 @@ export const WinProbChart = ({ data, currentMinute }: WinProbChartProps) => (
     <LineChart data={data}>
       <XAxis
         dataKey="minute"
-        ticks={data.map(d => d.minute).filter(m => m % 2 === 0)} // only even minutes
+        ticks={data.map(d => d.minute).filter(m => m % 2 === 0)}
         label={{ value: "Time (mins)", position: "insideBottom", offset: -5 }}
       />
       <YAxis
-        domain={[0.25, 0.75]}
-        ticks={[0.25, 0.5, 0.75]}
+        domain={[0.4, 0.6]}
+        ticks={[0.4, 0.5, 0.6]}
         tickFormatter={(v) => `${Math.round(v * 100)}%`} 
       />
       <Tooltip formatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
